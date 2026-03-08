@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, Users, Share, MoreVertical } from 'lucide-react';
+import { Calendar, Users, Share, MoreVertical, Lightbulb } from 'lucide-react';
 import AIInsightCard from './AIInsightCard';
 import TranscriptChat from './TranscriptChat';
 
