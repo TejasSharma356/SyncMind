@@ -17,9 +17,9 @@ const MeetingDetails = ({ meeting }) => {
             {/* Header */}
             <div className="px-8 py-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-start sticky top-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm z-10 transition-colors">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-3">
-                        {meeting.title || meeting.summary || "Untitled Meeting"}
-                        <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider font-semibold">
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 flex flex-wrap items-center gap-3">
+                        <span className="line-clamp-2">{meeting.title || meeting.summary || "Untitled Meeting"}</span>
+                        <span className="flex-shrink-0 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider font-semibold">
                             AI PROCESSED
                         </span>
                     </h1>
@@ -75,10 +75,17 @@ const MeetingDetails = ({ meeting }) => {
                         <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                             Insights
                         </h2>
-                        <div className="grid gap-3">
-                            {meeting.insights.map((insight, index) => (
-                                <AIInsightCard key={index} content={insight.text} />
-                            ))}
+                        <div className="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
+                            <ul className="space-y-4">
+                                {meeting.insights.map((insight, index) => (
+                                    <li key={index} className="flex gap-3 text-sm text-gray-700 dark:text-gray-300">
+                                        <span className="text-yellow-500 mt-0.5 flex-shrink-0">
+                                            <Lightbulb size={16} />
+                                        </span>
+                                        <span className="leading-relaxed">{insight.text}</span>
+                                    </li>
+                                ))}
+                            </ul>
                         </div>
                     </section>
                 )}
