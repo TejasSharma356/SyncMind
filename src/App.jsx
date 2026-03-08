@@ -46,7 +46,7 @@ function App() {
     };
 
     fetchMeetings();
-    const interval = setInterval(fetchMeetings, 10000);
+    const interval = setInterval(fetchMeetings, 5000);
     return () => clearInterval(interval);
   }, []); // Remove selectedMeetingId from dep array to avoid re-selecting on every poll unless empty
 
