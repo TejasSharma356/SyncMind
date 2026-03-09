@@ -123,25 +123,6 @@ const ProjectInfoPage = ({ onBack, onGetSoftware, onLaunch }) => {
                         </div>
                     </div>
 
-                    {/* CTA */}
-                    <div className="text-center p-10 bg-gradient-to-br from-blue-600/20 to-purple-600/20 border border-blue-500/20 rounded-3xl backdrop-blur-sm">
-                        <h2 className="text-3xl font-bold text-white mb-3">Ready to get started?</h2>
-                        <p className="text-gray-400 mb-8 max-w-lg mx-auto">Download the desktop app, point it at your next meeting, and watch your dashboard come alive.</p>
-                        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                            <button
-                                onClick={onGetSoftware}
-                                className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-4 rounded-xl text-base transition-all hover:scale-105 shadow-xl shadow-blue-500/20"
-                            >
-                                Get the Software <ArrowRight size={18} />
-                            </button>
-                            <button
-                                onClick={onLaunch}
-                                className="inline-flex items-center gap-2 bg-white/10 border border-white/10 hover:bg-white/20 text-white font-semibold px-8 py-4 rounded-xl text-base transition-all"
-                            >
-                                Open Dashboard <ArrowRight size={18} />
-                            </button>
-                        </div>
-                    </div>
                 </div>
 
                 <footer className="text-center py-8 text-gray-600 text-xs border-t border-white/5">

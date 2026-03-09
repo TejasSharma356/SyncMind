@@ -8,7 +8,7 @@ const AIInsightCard = ({ content }) => {
                 <div className="bg-blue-500 p-1.5 rounded-lg text-white shadow-sm">
                     <Bot size={16} />
                 </div>
-                <span className="text-sm font-bold text-gray-900 dark:text-white">AI Silent Teammate</span>
+                <span className="text-sm font-bold text-gray-900 dark:text-white">SyncMInd</span>
                 <span className="text-[10px] text-blue-500 dark:text-blue-400 font-bold uppercase tracking-wider ml-1">Insight</span>
             </div>
 

@@ -9,6 +9,7 @@ import LandingPage from './components/LandingPage';
 import AboutPage from './components/AboutPage';
 import ProjectInfoPage from './components/ProjectInfoPage';
 import FeaturesPage from './components/FeaturesPage';
+import DemoPage from './components/DemoPage';
 
 const API_URL = import.meta.env.VITE_API_URL;
 function App() {
@@ -16,6 +17,8 @@ function App() {
   const [showAbout, setShowAbout] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
   const [showFeatures, setShowFeatures] = useState(false);
+  const [showDemo, setShowDemo] = useState(false);
+  const [launchSource, setLaunchSource] = useState('landing'); // Track where we launched from
   const [currentView, setCurrentView] = useState('meetings');
   const [meetings, setMeetings] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -102,35 +105,64 @@ function App() {
     }
   };
 
+  const handleBackToSource = () => {
+    switch (launchSource) {
+      case 'about':
+        setShowAbout(true);
+        break;
+      case 'info':
+        setShowInfo(true);
+        break;
+      case 'features':
+        setShowFeatures(true);
+        break;
+      case 'demo':
+        setShowDemo(true);
+        break;
+      case 'landing':
+      default:
+        setShowLanding(true);
+        break;
+    }
+  };
+
   if (showInfo) {
     return <ProjectInfoPage
-      onBack={() => setShowInfo(false)}
+      onBack={() => { setShowInfo(false); setShowLanding(true); }}
       onGetSoftware={() => { setShowInfo(false); setShowAbout(true); }}
-      onLaunch={() => { setShowInfo(false); setShowLanding(false); }}
+      onLaunch={() => { setLaunchSource('info'); setShowInfo(false); setShowLanding(false); }}
     />;
   }
 
   if (showAbout) {
     return <AboutPage
-      onBack={() => setShowAbout(false)}
-      onLaunch={() => { setShowAbout(false); setShowLanding(false); }}
+      onBack={() => { setShowAbout(false); setShowLanding(true); }}
+      onLaunch={() => { setLaunchSource('about'); setShowAbout(false); setShowLanding(false); }}
     />;
   }
 
   if (showFeatures) {
     return <FeaturesPage
-      onBack={() => setShowFeatures(false)}
+      onBack={() => { setShowFeatures(false); setShowLanding(true); }}
       onGetSoftware={() => { setShowFeatures(false); setShowAbout(true); }}
-      onLaunch={() => { setShowFeatures(false); setShowLanding(false); }}
+      onLaunch={() => { setLaunchSource('features'); setShowFeatures(false); setShowLanding(false); }}
+    />;
+  }
+
+  if (showDemo) {
+    return <DemoPage
+      onBack={() => { setShowDemo(false); setShowLanding(true); }}
+      onLaunch={() => { setLaunchSource('demo'); setShowDemo(false); setShowLanding(false); }}
     />;
   }
 
   if (showLanding) {
     return <LandingPage
-      onLaunch={() => setShowLanding(false)}
+      onLaunch={() => { setLaunchSource('landing'); setShowLanding(false); }}
       onAbout={() => setShowInfo(true)}
       onGetSoftware={() => setShowAbout(true)}
       onFeatures={() => setShowFeatures(true)}
+      onWatchDemo={() => setShowDemo(true)}
     />;
   }
 
@@ -138,7 +170,12 @@ function App() {
     <div className={`flex h-screen font-sans overflow-hidden ${darkMode ? 'dark bg-gray-950' : 'bg-gray-50'}`}>
       {/* Left Sidebar */}
       <div className="w-64 flex-shrink-0 relative z-20">
-        <Sidebar activeView={currentView} onNavigate={setCurrentView} />
+        <Sidebar
+          activeView={currentView}
+          onNavigate={setCurrentView}
+          onNavigateBack={handleBackToSource}
+          onNavigateHome={() => setShowLanding(true)}
+        />
       </div>
 
       {/* Main Content Area */}

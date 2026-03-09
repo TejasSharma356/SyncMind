@@ -1,8 +1,8 @@
 import React from 'react';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Play } from 'lucide-react';
 import { AetherHero } from './ui/aether-hero';
 
-const LandingPage = ({ onLaunch, onAbout, onGetSoftware, onFeatures }) => {
+const LandingPage = ({ onLaunch, onAbout, onGetSoftware, onFeatures, onWatchDemo }) => {
     return (
         <div
             className="min-h-screen font-sans text-white relative"
@@ -92,14 +92,14 @@ const LandingPage = ({ onLaunch, onAbout, onGetSoftware, onFeatures }) => {
                             Get the Software
                         </button>
                         <button
-                            onClick={onAbout}
+                            onClick={onWatchDemo}
                             className="inline-flex items-center gap-2 font-semibold px-8 py-4 rounded-xl text-base transition-all hover:bg-white/10"
                             style={{
                                 boxShadow: 'inset 0 0 0 1px rgba(255,255,255,.22)',
                                 backdropFilter: 'blur(4px)',
                             }}
                         >
-                            Learn More
+                            <Play size={18} fill="currentColor" /> Watch Demo
                         </button>
                     </div>
                 </section>
