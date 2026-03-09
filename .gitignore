@@ -1,0 +1,9 @@
+node_modules
+release
+release2
+dist
+build
+win-unpacked
+*.exe
+*.wav
+.env

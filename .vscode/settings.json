@@ -1,0 +1,4 @@
+{
+    "python.terminal.useEnvFile": true,
+    "css.lint.unknownAtRules": "ignore"
+}

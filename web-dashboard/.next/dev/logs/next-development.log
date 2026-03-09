@@ -1,0 +1,4 @@
+[00:00:02.523] Server  LOG     ✓ Ready in 1781ms
+[00:02:48.489] Server  LOG     ○ Compiling /dashboard ...
+[00:02:50.361] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:49:19.369] Server  LOG       Reload env: .env
