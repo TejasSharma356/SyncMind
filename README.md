@@ -1,6 +1,6 @@
 <div align="center">
   <img src="https://ui-avatars.com/api/?name=SM&background=2563EB&color=fff&size=80&rounded=true" alt="SyncMInd Logo" />
-  <h1>SyncMInd</h1>
+  <h1>SyncMind</h1>
   <p><em>Your meetings, perfectly synced and recalled.</em></p>
   <p>An AI-powered meeting assistant that silently attends your calls, transcribes every word, and turns conversations into actionable insights — automatically.</p>
   
