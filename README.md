@@ -6,7 +6,7 @@
   
   [![Website](https://img.shields.io/badge/Website-Live-green?style=for-the-badge&logo=vercel)](https://sync-mind.vercel.app/)
   
-  [▶️ Watch Demo](#) • [⬇️ Download Windows App](https://github.com/Boomerforlife/SyncMind_Electron)
+  [▶️ Watch Demo](https://youtu.be/fRcIDYa8MPI) • [⬇️ Download Windows App](https://github.com/Boomerforlife/SyncMind_Electron)
 </div>
 
 ---

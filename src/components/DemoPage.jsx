@@ -7,8 +7,8 @@ const DemoPage = ({ onBack, onLaunch }) => {
     // Toggle this to false to use a local video uploaded from your device
     const useYouTube = true;
 
-    // Placeholder YouTube ID - replace with your actual YouTube video ID
-    const youtubeId = "dQw4w9WgXcQ";
+    // Actual YouTube ID for the project demo
+    const youtubeId = "fRcIDYa8MPI";
 
     // Placeholder Local Video URL - replace with your video path (e.g. '/demo.mp4' in public folder)
     const localVideoUrl = "/placeholder-video.mp4";
