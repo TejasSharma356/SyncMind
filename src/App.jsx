@@ -10,6 +10,8 @@ import AboutPage from './components/AboutPage';
 import ProjectInfoPage from './components/ProjectInfoPage';
 import FeaturesPage from './components/FeaturesPage';
 import DemoPage from './components/DemoPage';
+import PricingPage from './components/PricingPage';
+import Aurora from './components/Aurora';
 
 const API_URL = import.meta.env.VITE_API_URL;
 function App() {
@@ -18,8 +20,10 @@ function App() {
   const [showInfo, setShowInfo] = useState(false);
   const [showFeatures, setShowFeatures] = useState(false);
   const [showDemo, setShowDemo] = useState(false);
+  const [showPricing, setShowPricing] = useState(false);
   const [launchSource, setLaunchSource] = useState('landing'); // Track where we launched from
   const [currentView, setCurrentView] = useState('meetings');
+  const [previousView, setPreviousView] = useState(null);
   const [meetings, setMeetings] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedMeetingId, setSelectedMeetingId] = useState(null);
@@ -75,7 +79,28 @@ function App() {
   const renderContent = () => {
     switch (currentView) {
       case 'insights':
-        return <Insights meetings={meetings} />;
+        return <Insights 
+          meetings={meetings} 
+          onViewDetails={(meetingId) => {
+            setPreviousView('insights');
+            setSelectedMeetingId(meetingId);
+            setCurrentView('meeting_detail');
+          }}
+        />;
+      case 'meeting_detail':
+        return (
+          <div className="w-full h-full">
+            <MeetingDetails
+              key={selectedMeeting?.meetingId || 'empty'}
+              meeting={selectedMeeting}
+              standalone={true}
+              onBack={() => {
+                setCurrentView(previousView || 'meetings');
+                setPreviousView(null);
+              }}
+            />
+          </div>
+        );
       case 'settings':
         return <Settings darkMode={darkMode} toggleTheme={toggleTheme} />;
       case 'profile':
@@ -85,7 +110,7 @@ function App() {
         return (
           <div className="flex w-full h-full overflow-hidden">
             {/* Middle Panel - Meeting List */}
-            <div className="w-[400px] flex-shrink-0 h-full border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+            <div className="w-[400px] flex-shrink-0 h-full border-r border-gray-200 dark:border-gray-800 bg-white/50 dark:bg-gray-900/40 backdrop-blur-md">
               <MeetingList
                 meetings={meetings}
                 selectedId={selectedMeetingId}
@@ -94,7 +119,7 @@ function App() {
             </div>
 
             {/* Right Panel - Meeting Details */}
-            <div className="flex-1 h-full bg-white dark:bg-gray-900 relative">
+            <div className="flex-1 h-full bg-transparent relative">
               <MeetingDetails
                 key={selectedMeeting?.meetingId || 'empty'}
                 meeting={selectedMeeting}
@@ -118,6 +143,9 @@ function App() {
         break;
       case 'demo':
         setShowDemo(true);
+        break;
+      case 'pricing':
+        setShowPricing(true);
         break;
       case 'landing':
       default:
@@ -156,6 +184,13 @@ function App() {
     />;
   }
 
+  if (showPricing) {
+    return <PricingPage
+      onBack={() => { setShowPricing(false); setShowLanding(true); }}
+      onLaunch={() => { setLaunchSource('pricing'); setShowPricing(false); setShowLanding(false); }}
+    />;
+  }
+
   if (showLanding) {
     return <LandingPage
       onLaunch={() => { setLaunchSource('landing'); setShowLanding(false); }}
@@ -163,11 +198,18 @@ function App() {
       onGetSoftware={() => setShowAbout(true)}
       onFeatures={() => setShowFeatures(true)}
       onWatchDemo={() => setShowDemo(true)}
+      onPricing={() => setShowPricing(true)}
     />;
   }
 
   return (
-    <div className={`flex h-screen font-sans overflow-hidden ${darkMode ? 'dark bg-gray-950' : 'bg-gray-50'}`}>
+    <div className={`flex h-screen font-sans overflow-hidden ${darkMode ? 'dark' : ''}`}>
+      <Aurora
+        colorStops={["#cf66ff", "#70aef0", "#e50649"]}
+        blend={0.5}
+        amplitude={1.0}
+        speed={1.0}
+      />
       {/* Left Sidebar */}
       <div className="w-64 flex-shrink-0 relative z-20">
         <Sidebar
@@ -179,7 +221,7 @@ function App() {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex overflow-hidden bg-gray-50 dark:bg-black">
+      <div className="flex-1 flex overflow-hidden">
         {renderContent()}
       </div>
 

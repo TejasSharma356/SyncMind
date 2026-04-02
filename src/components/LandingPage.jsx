@@ -2,7 +2,7 @@ import React from 'react';
 import { ArrowRight, Play } from 'lucide-react';
 import { AetherHero } from './ui/aether-hero';
 
-const LandingPage = ({ onLaunch, onAbout, onGetSoftware, onFeatures, onWatchDemo }) => {
+const LandingPage = ({ onLaunch, onAbout, onGetSoftware, onFeatures, onWatchDemo, onPricing }) => {
     return (
         <div
             className="min-h-screen font-sans text-white relative"
@@ -39,7 +39,7 @@ const LandingPage = ({ onLaunch, onAbout, onGetSoftware, onFeatures, onWatchDemo
 
                         <div className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-300">
                             <button onClick={onFeatures} className="hover:text-white hover:bg-white/5 px-3 py-1.5 rounded-lg transition-all">Features</button>
-                            <a href="#" className="hover:text-white hover:bg-white/5 px-3 py-1.5 rounded-lg transition-all">Pricing</a>
+                            <button onClick={onPricing} className="hover:text-white hover:bg-white/5 px-3 py-1.5 rounded-lg transition-all">Pricing</button>
                             <button onClick={onAbout} className="hover:text-white hover:bg-white/5 px-3 py-1.5 rounded-lg transition-all">About</button>
                         </div>
 

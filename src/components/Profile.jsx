@@ -3,7 +3,7 @@ import { User, Mail, Briefcase, MapPin, Building2, Clock, Globe, Laptop, Smartph
 
 const Profile = () => {
     return (
-        <div className="flex-1 w-full h-full overflow-y-auto bg-gray-50/50 dark:bg-black transition-colors duration-200">
+        <div className="flex-1 w-full h-full overflow-y-auto bg-transparent transition-colors duration-200">
             <div className="w-full max-w-[100rem] mx-auto px-12 py-20 flex flex-col gap-12">
 
                 <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-4">
@@ -12,7 +12,7 @@ const Profile = () => {
                 </h1>
 
                 {/* Top Profile Card */}
-                <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm p-12 transition-colors flex flex-col md:flex-row items-start md:items-center gap-10">
+                <div className="bg-white/50 dark:bg-gray-900/40 backdrop-blur-md rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm p-12 transition-colors flex flex-col md:flex-row items-start md:items-center gap-10">
                     <div className="w-40 h-40 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400 text-5xl font-bold border-4 border-white dark:border-gray-800 shadow-xl shrink-0">
                         TS
                     </div>

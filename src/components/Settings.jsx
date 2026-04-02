@@ -5,7 +5,7 @@ const Settings = ({ darkMode, toggleTheme }) => {
     const [desktopConnected, setDesktopConnected] = useState(true);
 
     return (
-        <div className="flex-1 w-full h-full overflow-y-auto bg-gray-50/50 dark:bg-black transition-colors duration-200">
+        <div className="flex-1 w-full h-full overflow-y-auto bg-transparent transition-colors duration-200">
             <div className="w-full max-w-[100rem] mx-auto px-12 py-20 flex flex-col gap-12">
 
                 <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-4">
@@ -18,7 +18,7 @@ const Settings = ({ darkMode, toggleTheme }) => {
                     <div className="flex flex-col gap-6">
 
                         {/* Appearance / Display */}
-                        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-8 overflow-hidden">
+                        <div className="bg-white/50 dark:bg-gray-900/40 backdrop-blur-md rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-8 overflow-hidden">
                             <h2 className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-white mb-6">Appearance</h2>
                             <div className="flex items-center justify-between">
                                 <div>

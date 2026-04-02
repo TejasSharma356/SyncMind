@@ -11,7 +11,7 @@ const MeetingList = ({ meetings, selectedId, onSelect }) => {
     });
 
     return (
-        <div className="w-full h-full bg-white dark:bg-gray-900 flex flex-col border-r border-gray-200 dark:border-gray-800 transition-colors duration-200">
+        <div className="w-full h-full bg-transparent flex flex-col border-r border-gray-200 dark:border-gray-800 transition-colors duration-200">
             <div className="p-6 pb-4">
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Meetings</h2>
                 <div className="relative">
