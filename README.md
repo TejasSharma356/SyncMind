@@ -108,6 +108,24 @@ npm run dev
 
 ---
 
+## 🏗️ Setting Up Your Own Instance (Open Source)
+
+Since SyncMind relies heavily on cloud infrastructure to process AI tasks, running your own version of this ecosystem requires provisioning your own AWS resources.
+
+### 1. AWS Pipeline Setup
+You must deploy the backend infrastructure in your own AWS account:
+- **S3 Bucket:** To receive raw audio recordings.
+- **AWS Lambda & AI Models:** To process the audio, run transcription, and extract insights/summaries.
+- **DynamoDB:** To store the structured and processed meeting data.
+- **API Gateway:** To securely serve the data to the web dashboard.
+
+### 2. IAM Credentials & Configuration
+You will need to generate an IAM User with the appropriate permissions for both upload and read operations:
+- **Electron App (Desktop):** Requires your AWS `Access Key ID` and `Secret Access Key` (or equivalent temporary credentials) to securely upload audio recordings directly to your S3 bucket. You must configure these keys in the desktop app's environment.
+- **Web Dashboard (This Repo):** Requires the endpoint URL from your API Gateway. Update the `.env` file in this web project with your custom `VITE_API_URL` to fetch and display the data.
+
+---
+
 ## 🤝 Contributing
 
 We welcome community contributions! Since this is an ecosystem project, please specify if your PR is aimed at the frontend UX, the backend Lambda architecture, or the Electron Desktop Client.
