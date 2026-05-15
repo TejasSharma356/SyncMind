@@ -86,24 +86,49 @@ Our web application acts as the nerve center for all your meeting data.
 
 ## 🛠️ Local Development
 
-Want to spin up the web dashboard locally?
+Because SyncMind is a multi-part ecosystem, the repository uses different branches for different components.
 
+### 1. Web Dashboard (`main` branch)
 ```bash
 # 1. Clone the repository
 git clone https://github.com/TejasSharma356/SyncMInd.git
-
-# 2. Navigate to the project directory
 cd SyncMInd/syncmind
+
+# 2. Install dependencies
+npm install
+
+# 3. Set up environment variables
+# Create a .env file and add your actual API endpoint:
+# VITE_API_URL=https://your-api-gateway-url.amazonaws.com/dev/items
+
+# 4. Start the development server
+npm run dev
+```
+
+### 2. Desktop Client (`electron-recorder` branch)
+```bash
+# 1. Clone the repository (if you haven't already)
+git clone https://github.com/TejasSharma356/SyncMInd.git
+cd SyncMInd
+
+# 2. Checkout the desktop client branch
+git checkout electron-recorder
 
 # 3. Install dependencies
 npm install
 
 # 4. Set up environment variables
-# Create a .env file and add your actual API endpoint:
-# VITE_API_URL=https://your-api-gateway-url.amazonaws.com/dev/items
+# Create a .env file in the root with your AWS S3 bucket details & IAM keys:
+# AWS_ACCESS_KEY_ID=your_access_key
+# AWS_SECRET_ACCESS_KEY=your_secret_key
+# AWS_REGION=your_aws_region
+# S3_BUCKET_NAME=your_bucket_name
 
-# 5. Start the development server
+# 5. Run the Electron Desktop App
 npm run dev
+
+# 6. Build the packaged Windows installer (.exe)
+npm run dist
 ```
 
 ---
