@@ -12,6 +12,7 @@ import FeaturesPage from './components/FeaturesPage';
 import DemoPage from './components/DemoPage';
 import PricingPage from './components/PricingPage';
 import Aurora from './components/Aurora';
+import { mockMeetings } from './data/mockMeetings';
 
 const API_URL = import.meta.env.VITE_API_URL;
 function App() {
@@ -32,7 +33,11 @@ function App() {
   const selectedMeeting = meetings.find(m => m.meetingId === selectedMeetingId) || null;
 
   useEffect(() => {
+    let isMockMode = false;
+    let interval;
+
     const fetchMeetings = async () => {
+      if (isMockMode) return; // Stop fetching if we've fallen back to mock data
       try {
         const response = await fetch(API_URL);
         if (!response.ok) throw new Error('Failed to fetch');
@@ -50,17 +55,51 @@ function App() {
           return prev;
         });
       } catch (err) {
-        console.error("Failed to fetch meetings", err);
+        console.error("Failed to fetch meetings. Using mock data for local testing.", err);
+        isMockMode = true; // Mark as mock mode
+        if (interval) clearInterval(interval); // Clear the polling loop so edits persist
+        
+        // Use mock data as fallback
+        const sortedMockData = [...mockMeetings].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        setMeetings(sortedMockData);
+        setSelectedMeetingId(prev => {
+          if (!prev && sortedMockData.length > 0) {
+            return sortedMockData[0].meetingId;
+          }
+          return prev;
+        });
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchMeetings();
-    const interval = setInterval(fetchMeetings, 5000);
-    return () => clearInterval(interval);
+    interval = setInterval(fetchMeetings, 5000);
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, []); // Remove selectedMeetingId from dep array to avoid re-selecting on every poll unless empty
 
+
+  const handleDeleteMeeting = (meetingId) => {
+    const updatedMeetings = meetings.filter(m => m.meetingId !== meetingId);
+    setMeetings(updatedMeetings);
+    if (selectedMeetingId === meetingId) {
+      setSelectedMeetingId(updatedMeetings.length > 0 ? updatedMeetings[0].meetingId : null);
+    }
+    // If we're in standalone mode, go back
+    if (currentView === 'meeting_detail') {
+      setCurrentView(previousView || 'meetings');
+      setPreviousView(null);
+    }
+  };
+
+  const handleUpdateMeeting = (updatedMeeting) => {
+    const updatedMeetings = meetings.map(m => 
+      m.meetingId === updatedMeeting.meetingId ? updatedMeeting : m
+    );
+    setMeetings(updatedMeetings);
+  };
 
   const [darkMode, setDarkMode] = useState(true);
 
@@ -89,7 +128,7 @@ function App() {
         />;
       case 'meeting_detail':
         return (
-          <div className="w-full h-full">
+          <div className="w-full h-full print:h-auto print:block">
             <MeetingDetails
               key={selectedMeeting?.meetingId || 'empty'}
               meeting={selectedMeeting}
@@ -98,6 +137,8 @@ function App() {
                 setCurrentView(previousView || 'meetings');
                 setPreviousView(null);
               }}
+              onDelete={handleDeleteMeeting}
+              onUpdate={handleUpdateMeeting}
             />
           </div>
         );
@@ -108,9 +149,9 @@ function App() {
       case 'meetings':
       default:
         return (
-          <div className="flex w-full h-full overflow-hidden">
+          <div className="flex w-full h-full overflow-hidden print:overflow-visible print:block">
             {/* Middle Panel - Meeting List */}
-            <div className="w-[400px] flex-shrink-0 h-full border-r border-gray-200 dark:border-gray-800 bg-white/50 dark:bg-gray-900/40 backdrop-blur-md">
+            <div className="w-[400px] flex-shrink-0 h-full border-r border-gray-200 dark:border-gray-800 bg-white/50 dark:bg-gray-900/40 backdrop-blur-md print:hidden">
               <MeetingList
                 meetings={meetings}
                 selectedId={selectedMeetingId}
@@ -119,10 +160,12 @@ function App() {
             </div>
 
             {/* Right Panel - Meeting Details */}
-            <div className="flex-1 h-full bg-transparent relative">
+            <div className="flex-1 h-full bg-transparent relative print:h-auto print:overflow-visible">
               <MeetingDetails
                 key={selectedMeeting?.meetingId || 'empty'}
                 meeting={selectedMeeting}
+                onDelete={handleDeleteMeeting}
+                onUpdate={handleUpdateMeeting}
               />
             </div>
           </div>
@@ -203,15 +246,17 @@ function App() {
   }
 
   return (
-    <div className={`flex h-screen font-sans overflow-hidden ${darkMode ? 'dark' : ''}`}>
-      <Aurora
-        colorStops={["#cf66ff", "#70aef0", "#e50649"]}
-        blend={0.5}
-        amplitude={1.0}
-        speed={1.0}
-      />
+    <div className={`flex h-screen font-sans overflow-hidden print:h-auto print:overflow-visible print:bg-white print:text-black ${darkMode ? 'dark' : ''}`}>
+      <div className="print:hidden">
+        <Aurora
+          colorStops={["#cf66ff", "#70aef0", "#e50649"]}
+          blend={0.5}
+          amplitude={1.0}
+          speed={1.0}
+        />
+      </div>
       {/* Left Sidebar */}
-      <div className="w-64 flex-shrink-0 relative z-20">
+      <div className="w-64 flex-shrink-0 relative z-20 print:hidden">
         <Sidebar
           activeView={currentView}
           onNavigate={setCurrentView}
@@ -221,7 +266,7 @@ function App() {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden print:overflow-visible">
         {renderContent()}
       </div>
 
