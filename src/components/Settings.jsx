@@ -6,10 +6,10 @@ const Settings = ({ darkMode, toggleTheme }) => {
 
     return (
         <div className="flex-1 w-full h-full overflow-y-auto bg-transparent transition-colors duration-200">
-            <div className="w-full max-w-[100rem] mx-auto px-12 py-20 flex flex-col gap-12">
+            <div className="w-full max-w-[100rem] mx-auto px-6 py-10 md:px-12 md:py-20 flex flex-col gap-8 md:gap-12">
 
-                <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-4">
-                    <SettingsIcon className="text-gray-400 dark:text-gray-500" size={40} />
+                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-2 md:mb-6 flex items-center gap-4">
+                    <SettingsIcon className="text-gray-400 dark:text-gray-500" size={32} md:size={40} />
                     Settings
                 </h1>
 
@@ -18,23 +18,23 @@ const Settings = ({ darkMode, toggleTheme }) => {
                     <div className="flex flex-col gap-6">
 
                         {/* Appearance / Display */}
-                        <div className="bg-white/50 dark:bg-gray-900/40 backdrop-blur-md rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-8 overflow-hidden">
+                        <div className="bg-white/50 dark:bg-gray-900/40 backdrop-blur-md rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-6 md:p-8 overflow-hidden">
                             <h2 className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-white mb-6">Appearance</h2>
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 sm:gap-0">
                                 <div>
-                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Theme Preferences</h3>
-                                    <p className="text-base text-gray-500 dark:text-gray-400">Customize the look and feel of your dashboard</p>
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1 md:mb-2">Theme Preferences</h3>
+                                    <p className="text-sm md:text-base text-gray-500 dark:text-gray-400">Customize the look and feel of your dashboard</p>
                                 </div>
-                                <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 p-2 rounded-xl">
+                                <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 p-1.5 md:p-2 rounded-xl self-start sm:self-auto">
                                     <button
                                         onClick={() => !darkMode && toggleTheme()}
-                                        className={`px-6 py-3 rounded-lg text-base font-medium transition-all ${!darkMode ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'}`}
+                                        className={`px-4 py-2 md:px-6 md:py-3 rounded-lg text-sm md:text-base font-medium transition-all ${!darkMode ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'}`}
                                     >
                                         Light
                                     </button>
                                     <button
                                         onClick={() => darkMode && toggleTheme()}
-                                        className={`px-6 py-3 rounded-lg text-base font-medium transition-all ${darkMode ? 'bg-gray-700 shadow-sm text-white' : 'text-gray-500 hover:text-gray-900'}`}
+                                        className={`px-4 py-2 md:px-6 md:py-3 rounded-lg text-sm md:text-base font-medium transition-all ${darkMode ? 'bg-gray-700 shadow-sm text-white' : 'text-gray-500 hover:text-gray-900'}`}
                                     >
                                         Dark
                                     </button>
@@ -43,29 +43,29 @@ const Settings = ({ darkMode, toggleTheme }) => {
                         </div>
 
                         {/* Desktop App Connectivity */}
-                        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-8">
+                        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-6 md:p-8">
                             <div className="flex items-center gap-4 mb-6">
-                                <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-xl text-blue-600 dark:text-blue-400">
-                                    <MonitorSmartphone size={28} />
+                                <div className="p-2.5 md:p-3 bg-blue-100 dark:bg-blue-900/30 rounded-xl text-blue-600 dark:text-blue-400">
+                                    <MonitorSmartphone size={24} md:size={28} />
                                 </div>
                                 <h2 className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">Desktop App Connection</h2>
                             </div>
 
-                            <div className="flex items-center justify-between p-6 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700/50 mb-6">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 md:p-6 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700/50 mb-6 gap-4 sm:gap-0">
                                 <div className="flex items-center gap-4">
                                     {desktopConnected ? (
-                                        <CheckCircle2 className="text-emerald-500" size={28} />
+                                        <CheckCircle2 className="text-emerald-500 shrink-0" size={24} md:size={28} />
                                     ) : (
-                                        <AlertCircle className="text-amber-500" size={28} />
+                                        <AlertCircle className="text-amber-500 shrink-0" size={24} md:size={28} />
                                     )}
                                     <div>
                                         <h3 className="font-medium text-gray-900 dark:text-white text-base">Status</h3>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{desktopConnected ? 'Connected via SyncMInd Desktop App' : 'Waiting for connection...'}</p>
+                                        <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mt-1">{desktopConnected ? 'Connected via SyncMind' : 'Waiting for connection...'}</p>
                                     </div>
                                 </div>
                                 <button
                                     onClick={() => setDesktopConnected(!desktopConnected)}
-                                    className="text-base font-medium text-blue-600 dark:text-blue-400 hover:underline"
+                                    className="text-sm md:text-base font-medium text-blue-600 dark:text-blue-400 hover:underline self-start sm:self-auto"
                                 >
                                     {desktopConnected ? 'Disconnect' : 'Connect'}
                                 </button>
@@ -96,10 +96,10 @@ const Settings = ({ darkMode, toggleTheme }) => {
                         </div>
 
                         {/* Notifications */}
-                        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-8 line-clamp-2">
+                        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-6 md:p-8">
                             <div className="flex items-center gap-4 mb-6">
-                                <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-xl text-amber-600 dark:text-amber-400">
-                                    <Bell size={28} />
+                                <div className="p-2.5 md:p-3 bg-amber-100 dark:bg-amber-900/30 rounded-xl text-amber-600 dark:text-amber-400">
+                                    <Bell size={24} md:size={28} />
                                 </div>
                                 <h2 className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">Notifications</h2>
                             </div>
@@ -122,18 +122,18 @@ const Settings = ({ darkMode, toggleTheme }) => {
                     <div className="flex flex-col gap-6">
 
                         {/* Account & Billing */}
-                        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-8 overflow-hidden">
+                        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-6 md:p-8 overflow-hidden">
                             <h2 className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-white mb-6">Account</h2>
 
-                            <div className="flex items-center gap-5 mb-8">
-                                <div className="w-16 h-16 bg-gray-200 dark:bg-gray-800 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400">
-                                    <User size={32} />
+                            <div className="flex flex-col sm:flex-row items-center gap-4 md:gap-5 mb-8">
+                                <div className="w-14 h-14 md:w-16 md:h-16 bg-gray-200 dark:bg-gray-800 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400">
+                                    <User size={28} md:size={32} />
                                 </div>
-                                <div>
+                                <div className="text-center sm:text-left">
                                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Sarah Jenkins</h3>
-                                    <p className="text-base text-gray-500 dark:text-gray-400">sarah@example.com</p>
+                                    <p className="text-sm md:text-base text-gray-500 dark:text-gray-400">sarah@example.com</p>
                                 </div>
-                                <button className="ml-auto px-5 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
+                                <button className="sm:ml-auto w-full sm:w-auto px-5 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm md:text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                                     Edit Profile
                                 </button>
                             </div>
@@ -151,10 +151,10 @@ const Settings = ({ darkMode, toggleTheme }) => {
                         </div>
 
                         {/* Privacy & Security */}
-                        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-8">
+                        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-6 md:p-8">
                             <div className="flex items-center gap-4 mb-6">
-                                <div className="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl text-emerald-600 dark:text-emerald-400">
-                                    <Shield size={28} />
+                                <div className="p-2.5 md:p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl text-emerald-600 dark:text-emerald-400">
+                                    <Shield size={24} md:size={28} />
                                 </div>
                                 <h2 className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">Privacy & Security</h2>
                             </div>
@@ -167,12 +167,12 @@ const Settings = ({ darkMode, toggleTheme }) => {
                                     </div>
                                     <span className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-sm px-3 py-1.5 rounded-lg font-medium">Enabled</span>
                                 </div>
-                                <div className="flex items-center justify-between pt-6 border-t border-gray-100 dark:border-gray-800">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-6 border-t border-gray-100 dark:border-gray-800 gap-4 sm:gap-0">
                                     <div>
                                         <h3 className="text-base font-medium text-gray-900 dark:text-white mb-1">Data Retention</h3>
                                         <p className="text-sm text-gray-500 dark:text-gray-400">Automatic deletion schedule</p>
                                     </div>
-                                    <select className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-base rounded-xl focus:ring-blue-500 focus:border-blue-500 block p-3 min-w-[120px]">
+                                    <select className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-sm md:text-base rounded-xl focus:ring-blue-500 focus:border-blue-500 block p-3 w-full sm:min-w-[120px] sm:w-auto">
                                         <option>Forever</option>
                                         <option>90 days</option>
                                         <option>30 days</option>
@@ -182,21 +182,22 @@ const Settings = ({ darkMode, toggleTheme }) => {
                         </div>
 
                         {/* Integrations */}
-                        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-8 overflow-hidden">
+                        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-6 md:p-8 overflow-hidden">
                             <div className="flex items-center justify-between mb-6">
                                 <div className="flex items-center gap-4">
-                                    <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-xl text-purple-600 dark:text-purple-400">
-                                        <Link2 size={28} />
+                                    <div className="p-2.5 md:p-3 bg-purple-100 dark:bg-purple-900/30 rounded-xl text-purple-600 dark:text-purple-400">
+                                        <Link2 size={24} md:size={28} />
                                     </div>
                                     <h2 className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">Integrations</h2>
                                 </div>
-                                <button className="text-base font-medium text-blue-600 dark:text-blue-400 hover:underline">View All</button>
+                                <button className="text-sm md:text-base font-medium text-blue-600 dark:text-blue-400 hover:underline">View All</button>
                             </div>
 
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between p-4 border border-gray-100 dark:border-gray-800 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/50 rounded-lg flex items-center justify-center text-blue-600 text-lg font-bold">G</div>
+                                        {/* Hidden for Mobile resolutions */}
+                                        <div className="hidden w-10 h-10 bg-blue-100 dark:bg-blue-900/50 rounded-lg md:flex items-center justify-center text-blue-600 text-lg font-bold">G</div>
                                         <div>
                                             <h3 className="text-base font-semibold text-gray-900 dark:text-white">Google Calendar</h3>
                                             <p className="text-sm text-gray-500 dark:text-gray-400">Sync meeting titles automatically</p>
@@ -206,7 +207,8 @@ const Settings = ({ darkMode, toggleTheme }) => {
                                 </div>
                                 <div className="flex items-center justify-between p-4 border border-gray-100 dark:border-gray-800 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/50 rounded-lg flex items-center justify-center text-purple-600 text-lg font-bold">S</div>
+                                        {/* Hidden for Mobile resolutions */}
+                                        <div className="hidden w-10 h-10 bg-purple-100 dark:bg-purple-900/50 rounded-lg md:flex items-center justify-center text-purple-600 text-lg font-bold">S</div>
                                         <div>
                                             <h3 className="text-base font-semibold text-gray-900 dark:text-white">Slack</h3>
                                             <p className="text-sm text-gray-500 dark:text-gray-400">Push action items to channels</p>
