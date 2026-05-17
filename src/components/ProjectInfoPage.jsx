@@ -1,7 +1,7 @@
 import React, { useCallback, memo } from 'react';
-import { ArrowLeft, ArrowRight, Brain, Mic, Zap, Shield, Target, Eye, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Brain, Mic, Zap, Target, Eye } from 'lucide-react';
 import { GLSLHills } from './ui/glsl-hills';
- 
+
 // ─── Style Token System ────────────────────────────────────────────────────────
 // Replaces unsafe dynamic Tailwind class interpolation with deterministic mappings.
 const FEATURE_VARIANTS = {
@@ -27,7 +27,7 @@ const FEATURE_VARIANTS = {
     accent:     'from-rose-500/20',
   },
 };
- 
+
 const MISSION_VARIANTS = {
   blue: {
     iconBg:     'bg-blue-500/10',
@@ -42,7 +42,7 @@ const MISSION_VARIANTS = {
     border:     'hover:border-purple-500/30',
   },
 };
- 
+
 // ─── Static Data ───────────────────────────────────────────────────────────────
 const FEATURES = [
   {
@@ -67,7 +67,7 @@ const FEATURES = [
     desc:  'Results are pushed to your personal dashboard in real-time. Your notes are ready before the meeting even ends.',
   },
 ];
- 
+
 const MISSIONS = [
   {
     icon:  Target,
@@ -82,22 +82,16 @@ const MISSIONS = [
     desc:  'A world where every decision made in a meeting is remembered, every commitment is tracked, and every insight is surfaced — without anyone lifting a pen.',
   },
 ];
- 
+
 const TECH_STACK = [
   { emoji: '⚡', name: 'Electron',      desc: 'Desktop App'    },
   { emoji: '⚛️', name: 'React + Vite',  desc: 'Web Dashboard'  },
   { emoji: '☁️', name: 'AWS Lambda',    desc: 'AI Processing'  },
   { emoji: '🗄️', name: 'DynamoDB',      desc: 'Data Storage'   },
 ];
- 
-const STATS = [
-  { value: '< 30s', label: 'Processing time' },
-  { value: '99%',   label: 'Accuracy rate'   },
-  { value: '0',     label: 'Manual effort'   },
-];
- 
+
 // ─── Primitive Components ──────────────────────────────────────────────────────
- 
+
 /** Accessible glass-morphic card wrapper */
 const GlassPanel = memo(({ children, className = '', ...props }) => (
   <div
@@ -112,7 +106,7 @@ const GlassPanel = memo(({ children, className = '', ...props }) => (
   </div>
 ));
 GlassPanel.displayName = 'GlassPanel';
- 
+
 /** Section heading with consistent hierarchy */
 const SectionHeading = memo(({ eyebrow, title, subtitle, center = false }) => (
   <header className={center ? 'text-center' : ''}>
@@ -132,14 +126,14 @@ const SectionHeading = memo(({ eyebrow, title, subtitle, center = false }) => (
   </header>
 ));
 SectionHeading.displayName = 'SectionHeading';
- 
-/** Accessible CTA button with visible focus ring */
-const CTAButton = memo(({ onClick, children, variant = 'primary', className = '', icon: Icon }) => {
+
+/** Accessible CTA button with visible focus ring and configurable icon placement */
+const CTAButton = memo(({ onClick, children, variant = 'primary', className = '', icon: Icon, iconPosition = 'right' }) => {
   const base =
     'inline-flex items-center gap-2 font-semibold rounded-xl transition-all duration-200 ' +
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-black ' +
     'active:scale-95 motion-safe:hover:scale-[1.03]';
- 
+
   const variants = {
     primary:
       'bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 text-sm shadow-lg shadow-blue-700/30 ' +
@@ -151,28 +145,20 @@ const CTAButton = memo(({ onClick, children, variant = 'primary', className = ''
       'text-gray-400 hover:text-white text-sm px-0 py-0 gap-1.5 ' +
       'focus-visible:ring-white/50 focus-visible:rounded-sm',
   };
- 
+
   return (
     <button
       onClick={onClick}
       className={[base, variants[variant], className].join(' ')}
     >
+      {Icon && iconPosition === 'left' && <Icon size={variant === 'nav' ? 15 : 17} aria-hidden="true" />}
       {children}
-      {Icon && <Icon size={variant === 'nav' ? 15 : 17} aria-hidden="true" />}
+      {Icon && iconPosition === 'right' && <Icon size={variant === 'nav' ? 15 : 17} aria-hidden="true" />}
     </button>
   );
 });
 CTAButton.displayName = 'CTAButton';
- 
-/** Floating stat pill */
-const StatPill = memo(({ value, label }) => (
-  <div className="flex flex-col items-center gap-0.5" role="text" aria-label={`${value} ${label}`}>
-    <span className="text-2xl sm:text-3xl font-bold text-white tracking-tight">{value}</span>
-    <span className="text-gray-500 text-xs uppercase tracking-widest">{label}</span>
-  </div>
-));
-StatPill.displayName = 'StatPill';
- 
+
 // ─── Feature Card ──────────────────────────────────────────────────────────────
 const FeatureCard = memo(({ icon: Icon, color, step, title, desc }) => {
   const v = FEATURE_VARIANTS[color] ?? FEATURE_VARIANTS.blue;
@@ -194,7 +180,7 @@ const FeatureCard = memo(({ icon: Icon, color, step, title, desc }) => {
       >
         {step}
       </span>
- 
+
       {/* Icon */}
       <div
         className={[
@@ -206,12 +192,12 @@ const FeatureCard = memo(({ icon: Icon, color, step, title, desc }) => {
       >
         <Icon size={22} />
       </div>
- 
+
       <div>
         <h3 className="font-bold text-white text-lg mb-1.5">{title}</h3>
         <p className="text-gray-400 text-sm leading-relaxed">{desc}</p>
       </div>
- 
+
       {/* Subtle gradient accent */}
       <div
         className={[
@@ -225,7 +211,7 @@ const FeatureCard = memo(({ icon: Icon, color, step, title, desc }) => {
   );
 });
 FeatureCard.displayName = 'FeatureCard';
- 
+
 // ─── Mission Card ──────────────────────────────────────────────────────────────
 const MissionCard = memo(({ icon: Icon, color, title, desc }) => {
   const v = MISSION_VARIANTS[color] ?? MISSION_VARIANTS.blue;
@@ -255,7 +241,7 @@ const MissionCard = memo(({ icon: Icon, color, title, desc }) => {
   );
 });
 MissionCard.displayName = 'MissionCard';
- 
+
 // ─── Tech Card ─────────────────────────────────────────────────────────────────
 const TechCard = memo(({ emoji, name, desc }) => (
   <div className="p-4 sm:p-5 bg-white/[0.03] rounded-xl border border-white/[0.07] text-center hover:bg-white/[0.06] hover:border-white/[0.12] transition-all duration-200 group">
@@ -271,31 +257,31 @@ const TechCard = memo(({ emoji, name, desc }) => (
   </div>
 ));
 TechCard.displayName = 'TechCard';
- 
+
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 const ProjectInfoPage = ({ onBack, onGetSoftware, onLaunch }) => {
   const handleBack = useCallback(() => onBack?.(), [onBack]);
   const handleGetSoftware = useCallback(() => onGetSoftware?.(), [onGetSoftware]);
   const handleLaunch = useCallback(() => onLaunch?.(), [onLaunch]);
- 
+
   return (
     <div className="min-h-screen bg-[#080808] font-sans text-white relative overflow-auto">
- 
+
       {/* ── Background Layer ──────────────────────────────────────────────── */}
       <div className="fixed inset-0 z-0 opacity-50 pointer-events-none" aria-hidden="true">
         <GLSLHills width="100%" height="100%" speed={0.3} />
       </div>
- 
+
       {/* Gradient overlays for atmosphere */}
       <div
         className="fixed inset-0 z-[1] pointer-events-none"
         aria-hidden="true"
         style={{
           background:
-            'linear-gradient(to bottom, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.18) 40%, rgba(0,0,0,0.82) 100%)',
+            'linear-gradient(to bottom, rgba(8,8,8,0.72) 0%, rgba(8,8,8,0.18) 40%, rgba(8,8,8,0.82) 100%)',
         }}
       />
- 
+
       {/* Radial accent — subtle blue glow centre-top */}
       <div
         className="fixed top-0 left-1/2 -translate-x-1/2 w-[600px] h-[340px] z-[1] pointer-events-none"
@@ -305,43 +291,32 @@ const ProjectInfoPage = ({ onBack, onGetSoftware, onLaunch }) => {
             'radial-gradient(ellipse at 50% 0%, rgba(59,130,246,0.08) 0%, transparent 70%)',
         }}
       />
- 
+
       {/* ── Page Content ─────────────────────────────────────────────────── */}
       <div className="relative z-10">
- 
+
         {/* ── Navbar ───────────────────────────────────────────────────── */}
         <header role="banner">
           <nav
             className="flex items-center justify-between px-5 sm:px-8 pt-6 pb-4"
             aria-label="Page navigation"
           >
-            <CTAButton onClick={handleBack} variant="nav" icon={ArrowLeft}>
+            <CTAButton onClick={handleBack} variant="nav" icon={ArrowLeft} iconPosition="left">
               Back
             </CTAButton>
- 
-            {/* Brand wordmark */}
-            <span className="text-sm font-semibold tracking-widest text-white/30 uppercase select-none" aria-hidden="true">
-              SyncMind
-            </span>
- 
-            <CTAButton onClick={handleGetSoftware} variant="primary" icon={ArrowRight}>
+
+            {/* Empty div to maintain flex spacing since center branding was removed */}
+            <div aria-hidden="true" />
+
+            <CTAButton onClick={handleGetSoftware} variant="primary" icon={ArrowRight} iconPosition="right">
               Get the Software
             </CTAButton>
           </nav>
         </header>
- 
+
         {/* ── Hero ─────────────────────────────────────────────────────── */}
         <section aria-labelledby="hero-heading" className="max-w-4xl mx-auto px-5 sm:px-8 pt-14 sm:pt-20 pb-16 sm:pb-20 text-center">
- 
-          {/* Badge */}
-          <div
-            className="inline-flex items-center gap-2 mb-7 px-4 py-1.5 rounded-full border border-white/10 bg-white/[0.04] backdrop-blur-sm"
-            role="note"
-          >
-            <Sparkles size={12} className="text-blue-400" aria-hidden="true" />
-            <span className="text-xs font-medium text-gray-400 tracking-wide">AI-Powered Meeting Intelligence</span>
-          </div>
- 
+
           <h1
             id="hero-heading"
             className="mb-6 tracking-tight leading-[1.04]"
@@ -354,31 +329,22 @@ const ProjectInfoPage = ({ onBack, onGetSoftware, onLaunch }) => {
               Project.
             </span>
           </h1>
- 
+
           <p className="text-gray-300 text-lg sm:text-xl max-w-2xl mx-auto mb-3 leading-relaxed">
             SyncMind is an AI-powered meeting assistant that silently attends your calls, transcribes every word, and turns conversations into actionable insights — automatically.
           </p>
           <p className="text-gray-500 text-sm sm:text-base max-w-lg mx-auto mb-10 leading-relaxed">
             No more manual note-taking. No more missed action items. Just pure focus on the conversation that matters.
           </p>
- 
-          {/* Stats row */}
-          <div className="flex justify-center gap-8 sm:gap-14 mb-10" role="list" aria-label="Key metrics">
-            {STATS.map(s => (
-              <div key={s.label} role="listitem">
-                <StatPill value={s.value} label={s.label} />
-              </div>
-            ))}
-          </div>
- 
-          <CTAButton onClick={handleLaunch} variant="ghost" icon={ArrowRight}>
+
+          <CTAButton onClick={handleLaunch} variant="ghost" icon={ArrowRight} iconPosition="right">
             Open Dashboard
           </CTAButton>
         </section>
- 
+
         {/* ── Main Content ─────────────────────────────────────────────── */}
         <main id="main-content" className="max-w-5xl mx-auto px-5 sm:px-8 pb-20 space-y-16 sm:space-y-20">
- 
+
           {/* ── Mission & Vision ─────────────────────────────────────── */}
           <section aria-labelledby="mission-heading">
             <h2 id="mission-heading" className="sr-only">Mission and Vision</h2>
@@ -388,7 +354,7 @@ const ProjectInfoPage = ({ onBack, onGetSoftware, onLaunch }) => {
               ))}
             </div>
           </section>
- 
+
           {/* ── Feature Pipeline ─────────────────────────────────────── */}
           <section aria-labelledby="features-heading">
             <div className="mb-8">
@@ -405,7 +371,7 @@ const ProjectInfoPage = ({ onBack, onGetSoftware, onLaunch }) => {
               ))}
             </div>
           </section>
- 
+
           {/* ── Tech Stack ───────────────────────────────────────────── */}
           <section aria-labelledby="tech-heading">
             <GlassPanel className="p-7 sm:p-8">
@@ -423,38 +389,9 @@ const ProjectInfoPage = ({ onBack, onGetSoftware, onLaunch }) => {
               </div>
             </GlassPanel>
           </section>
- 
-          {/* ── Final CTA Banner ─────────────────────────────────────── */}
-          <section aria-labelledby="cta-heading">
-            <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-blue-950/40 via-violet-950/30 to-transparent p-8 sm:p-12 text-center">
-              {/* Decorative glow */}
-              <div
-                className="absolute -top-20 left-1/2 -translate-x-1/2 w-64 h-40 pointer-events-none"
-                aria-hidden="true"
-                style={{
-                  background: 'radial-gradient(ellipse, rgba(99,102,241,0.18) 0%, transparent 70%)',
-                }}
-              />
-              <Shield size={32} className="text-blue-400/60 mx-auto mb-4" aria-hidden="true" />
-              <h2 id="cta-heading" className="text-2xl sm:text-3xl font-bold text-white mb-3 tracking-tight">
-                Ready to reclaim your focus?
-              </h2>
-              <p className="text-gray-400 text-sm sm:text-base max-w-md mx-auto mb-7 leading-relaxed">
-                Join teams using SyncMind to run smarter meetings, faster follow-ups, and zero forgotten decisions.
-              </p>
-              <div className="flex flex-col sm:flex-row justify-center gap-3">
-                <CTAButton onClick={handleGetSoftware} variant="primary" icon={ArrowRight}>
-                  Get the Software
-                </CTAButton>
-                <CTAButton onClick={handleLaunch} variant="ghost" icon={ArrowRight}>
-                  Open Dashboard
-                </CTAButton>
-              </div>
-            </div>
-          </section>
- 
+
         </main>
- 
+
         {/* ── Footer ───────────────────────────────────────────────────── */}
         <footer
           className="text-center py-8 text-gray-600 text-xs border-t border-white/[0.05]"
@@ -469,5 +406,5 @@ const ProjectInfoPage = ({ onBack, onGetSoftware, onLaunch }) => {
     </div>
   );
 };
- 
+
 export default ProjectInfoPage;
