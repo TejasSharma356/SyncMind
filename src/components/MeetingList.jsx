@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Search } from 'lucide-react';
+import { Search, Inbox } from 'lucide-react';
 
-const MeetingList = ({ meetings, selectedId, onSelect }) => {
+const MeetingList = ({ meetings, selectedId, onSelect, isLoading }) => {
     const [searchTerm, setSearchTerm] = useState('');
 
     const filteredMeetings = meetings.filter(meeting => {
@@ -27,9 +27,33 @@ const MeetingList = ({ meetings, selectedId, onSelect }) => {
             </div>
 
             <div className="flex-1 overflow-y-auto">
-                {filteredMeetings.length === 0 ? (
-                    <div className="p-6 text-center text-gray-500 text-sm">
-                        No meetings found matching "{searchTerm}"
+                {isLoading ? (
+                    // Loading Skeletons
+                    <div className="p-4 space-y-4">
+                        {[...Array(5)].map((_, i) => (
+                            <div key={i} className="p-4 border border-gray-100 dark:border-gray-800 rounded-xl animate-pulse">
+                                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-3"></div>
+                                <div className="flex gap-2">
+                                    <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
+                                    <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-20"></div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : filteredMeetings.length === 0 ? (
+                    // Empty State
+                    <div className="flex flex-col items-center justify-center h-full p-8 text-center animate-in fade-in duration-300">
+                        <div className="w-16 h-16 bg-blue-50 dark:bg-blue-900/20 text-blue-500 rounded-full flex items-center justify-center mb-4">
+                            <Inbox size={32} />
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                            {searchTerm ? 'No results found' : 'No meetings yet'}
+                        </h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 max-w-[200px]">
+                            {searchTerm 
+                                ? `We couldn't find any meetings matching "${searchTerm}"`
+                                : "Your processed meetings will appear here once they're ready."}
+                        </p>
                     </div>
                 ) : (
                     filteredMeetings.map((meeting) => (
