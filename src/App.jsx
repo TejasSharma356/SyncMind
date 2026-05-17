@@ -139,6 +139,7 @@ function App() {
               }}
               onDelete={handleDeleteMeeting}
               onUpdate={handleUpdateMeeting}
+              isLoading={isLoading}
             />
           </div>
         );
@@ -156,6 +157,7 @@ function App() {
                 meetings={meetings}
                 selectedId={selectedMeetingId}
                 onSelect={setSelectedMeetingId}
+                isLoading={isLoading}
               />
             </div>
 
@@ -166,6 +168,7 @@ function App() {
                 meeting={selectedMeeting}
                 onDelete={handleDeleteMeeting}
                 onUpdate={handleUpdateMeeting}
+                isLoading={isLoading}
               />
             </div>
           </div>

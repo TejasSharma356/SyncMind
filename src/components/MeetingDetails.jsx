@@ -12,12 +12,13 @@ import {
     Copy,
     Download,
     ExternalLink,
-    CheckCircle2
+    CheckCircle2,
+    FileText
 } from 'lucide-react';
 import AIInsightCard from './AIInsightCard';
 import TranscriptChat from './TranscriptChat';
 
-const MeetingDetails = ({ meeting, standalone = false, onBack, onDelete, onUpdate }) => {
+const MeetingDetails = ({ meeting, standalone = false, onBack, onDelete, onUpdate, isLoading }) => {
     const [completedTasks, setCompletedTasks] = useState(new Set());
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -115,10 +116,48 @@ const MeetingDetails = ({ meeting, standalone = false, onBack, onDelete, onUpdat
             return next;
         });
     };
+    if (isLoading) {
+        return (
+            <div className="flex-1 h-full bg-transparent flex flex-col animate-pulse">
+                <div className="px-8 py-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-start">
+                    <div className="w-full">
+                        <div className="h-8 bg-gray-200 dark:bg-gray-800 rounded w-1/2 mb-4"></div>
+                        <div className="flex gap-4">
+                            <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-32"></div>
+                            <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-24"></div>
+                        </div>
+                    </div>
+                </div>
+                <div className="flex-1 p-8 space-y-10">
+                    <div>
+                        <div className="h-6 bg-gray-200 dark:bg-gray-800 rounded w-48 mb-6"></div>
+                        <div className="h-32 bg-gray-100 dark:bg-gray-800/50 rounded-2xl w-full"></div>
+                    </div>
+                    <div>
+                        <div className="h-6 bg-gray-200 dark:bg-gray-800 rounded w-48 mb-6"></div>
+                        <div className="space-y-4">
+                            {[1, 2, 3].map(i => (
+                                <div key={i} className="h-16 bg-gray-100 dark:bg-gray-800/50 rounded-2xl w-full"></div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     if (!meeting) {
         return (
-            <div className="flex-1 flex items-center justify-center bg-gray-50 h-full">
-                <p className="text-gray-400">Select a meeting to view details</p>
+            <div className="flex-1 flex flex-col items-center justify-center bg-transparent h-full animate-in fade-in duration-300">
+                <div className="w-20 h-20 bg-blue-50 dark:bg-blue-900/20 text-blue-500 rounded-full flex items-center justify-center mb-6">
+                    <Calendar size={40} />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                    Select a Meeting
+                </h3>
+                <p className="text-gray-500 dark:text-gray-400 max-w-sm text-center">
+                    Choose a meeting from the list to view its details, insights, and action items.
+                </p>
             </div>
         );
     }
