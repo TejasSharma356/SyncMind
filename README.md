@@ -19,11 +19,11 @@ Check out the live web dashboard: **[https://sync-mind.vercel.app/](https://sync
 
 ---
 
-## ⚡ The Ecosystem Workflow
+## 🏛️ Architecture & Ecosystem Workflow
 
-SyncMInd operates on a seamless, zero-friction pipeline designed to eliminate the cognitive overhead of meetings. 
+SyncMInd operates on a seamless, zero-friction pipeline designed to eliminate the cognitive overhead of meetings. **It is critical that contributors understand this architecture to avoid accidentally breaking the pipeline or compromising the security model.**
 
-### 1. Capture (Desktop App)
+### 1. Capture (Desktop App - Electron)
 The workflow starts with the custom **SyncMInd Windows Electron App**.
 - Built with Electron & React.
 - Hooks into your system audio to silently capture any meeting (Zoom, Teams, Google Meet, or in-person).
@@ -46,6 +46,11 @@ You are here. 📍
 - Hosted seamlessly on **Vercel**.
 - Polls the backend dynamically to fetch fresh meeting data.
 - By the time you pour your post-meeting coffee, your full meeting brief is beautifully formatted, waiting in your web dashboard.
+
+### 🔒 Security Model & Architecture Integrity
+- **Decoupled Architecture:** The frontend dashboard should **never** connect directly to the database or require sensitive keys. It only reads from the secure API Gateway.
+- **Authentication:** Any future authentication (e.g., OAuth) must happen on the frontend, but the verification and data access logic *must* be handled by the AWS Lambda backend.
+- **No Hardcoded Secrets:** Contributors must use `.env` files for local development. Never commit API keys, AWS credentials, or sensitive data to the repository.
 
 ---
 
@@ -153,13 +158,46 @@ You will need to generate an IAM User with the appropriate permissions for both 
 
 ## 🤝 Contributing
 
-We welcome community contributions! Since this is an ecosystem project, please specify if your PR is aimed at the frontend UX, the backend Lambda architecture, or the Electron Desktop Client.
+We welcome community contributions! To ensure a smooth process and maintain the integrity of the architecture, please follow these guidelines:
 
-1. Fork the repo 
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+### 📖 How to Contribute
+1. **Setup:** Follow the [Local Development](#%EF%B8%8F-local-development) instructions above to get your local environment running.
+2. **Coding Standards:** 
+   - Keep UI components modular (use Tailwind utility classes safely).
+   - Ensure mobile responsiveness for web dashboard tasks.
+   - Do not bypass the AWS pipeline or hardcode mock data in production builds.
+3. **Branching & PRs:**
+   - Fork the repo and create your feature branch (`git checkout -b feature/AmazingFeature`).
+   - Commit your changes (`git commit -m 'feat: Add some AmazingFeature'`).
+   - Push to the branch (`git push origin feature/AmazingFeature`).
+   - Open a Pull Request and specify if it targets the `frontend`, `electron`, or `aws` architecture.
+
+### 🏷️ Issue Labels
+We use standard labels to track issues. Look out for these when finding a task:
+- `bug` - Something isn't working
+- `enhancement` - New feature or request
+- `frontend` - Web dashboard (React/Tailwind)
+- `electron` - Desktop client
+- `aws` - Backend pipeline and database
+- `good first issue` - Great for newcomers!
+
+### 🎯 Roadmap & Open Tasks
+
+Looking for something to work on? Here are some tasks we need help with:
+
+#### 🟢 Easy (Good First Issues)
+- **UI Polishing:** Fix alignments, padding, and mobile responsiveness.
+- **Loading States:** Add animated skeleton loaders for data fetching.
+- **Dashboard Cards:** Improve the layout of the meeting summary cards.
+- **Icons:** Standardize and upgrade the `lucide-react` icons across the app.
+
+#### 🟡 Medium
+- **Dashboard Analytics:** Add charts or stats for meeting duration and frequency.
+- **Theme Support:** Perfect the Dark/Light mode toggle and ensure contrast ratios.
+
+#### 🔴 Hard
+- **Electron UI Overlay Widget:** Build a seamless, hovering, or transparent widget for the desktop app that stays on top of other windows while recording, providing a minimal and unobtrusive footprint.
+- **Backend Refactoring:** Optimize the AWS Lambda functions for faster processing and lower memory usage.
 
 ---
 
