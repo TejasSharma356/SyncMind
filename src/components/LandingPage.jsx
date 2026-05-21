@@ -1,8 +1,27 @@
-import React from 'react';
-import { ArrowRight, Play } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowRight, Play, Menu, X } from 'lucide-react';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { AetherHero } from './ui/aether-hero';
 
 const LandingPage = ({ onLaunch, onAbout, onGetSoftware, onFeatures, onWatchDemo, onPricing }) => {
+    const [isOpen, setIsOpen] = useState(false);
+
+    // Close the mobile menu, then run the requested page-navigation callback
+    const handleNavClick = (action) => {
+        setIsOpen(false);
+        action();
+    };
+
+    // Close the mobile menu when the Escape key is pressed
+    useEffect(() => {
+        if (!isOpen) return;
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') setIsOpen(false);
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isOpen]);
+
     return (
         <div
             className="min-h-screen font-sans text-white relative"
@@ -26,7 +45,7 @@ const LandingPage = ({ onLaunch, onAbout, onGetSoftware, onFeatures, onWatchDemo
             <div className="relative z-10">
 
                 {/* Sticky Navbar */}
-                <div className="flex justify-center pt-8 px-4 sticky top-0 z-20 pb-2">
+                <div className="flex flex-col items-center pt-8 px-4 sticky top-0 z-20 pb-2">
                     <nav className="flex items-center gap-8 px-6 py-3 bg-black/30 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl">
                         <div className="flex items-center gap-2">
                             <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/20">
@@ -43,13 +62,44 @@ const LandingPage = ({ onLaunch, onAbout, onGetSoftware, onFeatures, onWatchDemo
                             <button onClick={onAbout} className="hover:text-white hover:bg-white/5 px-3 py-1.5 rounded-lg transition-all">About</button>
                         </div>
 
-                        <button
-                            onClick={onLaunch}
-                            className="bg-white text-black px-5 py-2 rounded-full text-sm font-semibold hover:bg-gray-100 transition-all hover:scale-105 shadow-lg active:scale-95"
-                        >
-                            Login
-                        </button>
+                        <div className="flex items-center gap-3">
+                            {/* Hamburger toggle — visible only on small screens */}
+                            <button
+                                onClick={() => setIsOpen((prev) => !prev)}
+                                className="md:hidden p-2 rounded-lg text-gray-300 hover:text-white hover:bg-white/5 transition-all"
+                                aria-label={isOpen ? 'Close navigation menu' : 'Open navigation menu'}
+                                aria-expanded={isOpen}
+                                aria-controls="mobile-nav-menu"
+                            >
+                                {isOpen ? <X size={20} /> : <Menu size={20} />}
+                            </button>
+
+                            <button
+                                onClick={onLaunch}
+                                className="bg-white text-black px-5 py-2 rounded-full text-sm font-semibold hover:bg-gray-100 transition-all hover:scale-105 shadow-lg active:scale-95"
+                            >
+                                Login
+                            </button>
+                        </div>
                     </nav>
+
+                    {/* Mobile dropdown menu — stacks below the navbar pill on small screens */}
+                    <AnimatePresence>
+                        {isOpen && (
+                            <Motion.div
+                                id="mobile-nav-menu"
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                transition={{ duration: 0.2 }}
+                                className="md:hidden mt-2 w-full max-w-xs flex flex-col gap-1 p-3 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl"
+                            >
+                                <button onClick={() => handleNavClick(onFeatures)} className="w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 transition-all">Features</button>
+                                <button onClick={() => handleNavClick(onPricing)} className="w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 transition-all">Pricing</button>
+                                <button onClick={() => handleNavClick(onAbout)} className="w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 transition-all">About</button>
+                            </Motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
 
                 {/* Hero Section — full viewport height */}
