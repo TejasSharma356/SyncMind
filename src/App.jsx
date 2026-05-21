@@ -88,7 +88,7 @@ function App() {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, []); // Remove selectedMeetingId from dep array to avoid re-selecting on every poll unless empty
+  }, [token, API_URL]);
 
 
   const handleDeleteMeeting = (meetingId) => {
@@ -211,14 +211,14 @@ function App() {
     return <ProjectInfoPage
       onBack={() => { setShowInfo(false); setShowLanding(true); }}
       onGetSoftware={() => { setShowInfo(false); setShowAbout(true); }}
-      onLaunch={() => { setLaunchSource('info'); setShowInfo(false); setShowLanding(true); }}
+      onLaunch={() => { setLaunchSource('info'); setShowInfo(false); setShowLogin(true); }}
     />;
   }
 
   if (showAbout) {
     return <AboutPage
       onBack={() => { setShowAbout(false); setShowLanding(true); }}
-      onLaunch={() => { setLaunchSource("info"); setShowInfo(false); setShowLogin(true); }}
+      onLaunch={() => { setLaunchSource('about'); setShowAbout(false); setShowLogin(true); }}
     />;
   }
 
@@ -226,21 +226,21 @@ function App() {
     return <FeaturesPage
       onBack={() => { setShowFeatures(false); setShowLanding(true); }}
       onGetSoftware={() => { setShowFeatures(false); setShowAbout(true); }}
-      onLaunch={() => { setLaunchSource("info"); setShowInfo(false); setShowLogin(true); }}
+      onLaunch={() => { setLaunchSource('features'); setShowFeatures(false); setShowLogin(true); }}
     />;
   }
 
   if (showDemo) {
     return <DemoPage
       onBack={() => { setShowDemo(false); setShowLanding(true); }}
-      onLaunch={() => { setLaunchSource("info"); setShowInfo(false); setShowLogin(true); }}
+      onLaunch={() => { setLaunchSource('demo'); setShowDemo(false); setShowLogin(true); }}
     />;
   }
 
   if (showPricing) {
     return <PricingPage
       onBack={() => { setShowPricing(false); setShowLanding(true); }}
-      onLaunch={() => { setLaunchSource("info"); setShowInfo(false); setShowLogin(true); }}
+      onLaunch={() => { setLaunchSource('pricing'); setShowPricing(false); setShowLogin(true); }}
     />;
   }
   if (showLogin) {
@@ -256,15 +256,15 @@ function App() {
   );
 }
   
-  if (!isAuthenticated) {
+  if (showLanding || !isAuthenticated) {
   return (
     <LandingPage
-      onLaunch={() => { setLaunchSource("landing"); setShowLogin(true); }}
-      onAbout={() => setShowInfo(true)}
-      onGetSoftware={() => setShowAbout(true)}
-      onFeatures={() => setShowFeatures(true)}
-      onWatchDemo={() => setShowDemo(true)}
-      onPricing={() => setShowPricing(true)}
+      onLaunch={() => { setLaunchSource("landing"); setShowLanding(false); setShowLogin(true); }}
+      onAbout={() => { setShowLanding(false); setShowInfo(true); }}
+      onGetSoftware={() => { setShowLanding(false); setShowAbout(true); }}
+      onFeatures={() => { setShowLanding(false); setShowFeatures(true); }}
+      onWatchDemo={() => { setShowLanding(false); setShowDemo(true); }}
+      onPricing={() => { setShowLanding(false); setShowPricing(true); }}
     />
   );
 }

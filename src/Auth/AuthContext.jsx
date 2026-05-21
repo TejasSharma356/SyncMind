@@ -19,7 +19,12 @@ export function AuthProvider({ children }) {
   const user = useMemo(() => {
     if (token) {
       try {
-        return jwtDecode(token);
+        const decoded = jwtDecode(token);
+        // Verify token is not expired (exp is in seconds)
+        if (decoded.exp && decoded.exp * 1000 < Date.now()) {
+          return null;
+        }
+        return decoded;
       } catch {
         return null;
       }
@@ -31,7 +36,7 @@ export function AuthProvider({ children }) {
     () => ({
       token,
       user,
-      isAuthenticated: Boolean(token),
+      isAuthenticated: Boolean(user),
       setToken,
       logout: () => setToken(""),
     }),
