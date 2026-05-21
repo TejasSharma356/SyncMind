@@ -70,7 +70,7 @@ const TranscriptChat = ({ transcript }) => {
             const prevMissingPunctuation = prevTextTrimmed && !isTerminal(prevTextTrimmed);
 
             // Important: If we just pulled a word forward, we skip pushing it back unless it's strictly lowercase.
-            if (currentBlock && textTrimmed && (startsWithLowercase || (prevMissingPunctuation && !didStitchForward))) {
+            if (currentBlock && textTrimmed && ((startsWithLowercase && currentBlock.speaker === speaker) || (prevMissingPunctuation && !didStitchForward))) {
                 const breakMatch = textTrimmed.match(/([.?!]\s+)/);
                 if (breakMatch) {
                     const breakIndex = breakMatch.index + breakMatch[0].length;
