@@ -13,6 +13,8 @@ import DemoPage from './components/DemoPage';
 import PricingPage from './components/PricingPage';
 import Aurora from './components/Aurora';
 import { mockMeetings } from './data/mockMeetings';
+import Login from "./Pages/Login";
+import { useAuth } from "./Auth/AuthContext";
 
 const API_URL = import.meta.env.VITE_API_URL;
 function App() {
@@ -28,18 +30,26 @@ function App() {
   const [meetings, setMeetings] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedMeetingId, setSelectedMeetingId] = useState(null);
+  const [showLogin, setShowLogin] = useState(false);
+  const { isAuthenticated, token } = useAuth();
 
   // Derive the selected meeting
   const selectedMeeting = meetings.find(m => m.meetingId === selectedMeetingId) || null;
 
   useEffect(() => {
+    if (!token) return;
+    if (!API_URL) {
+      console.warn("VITE_API_URL is not set. Skipping meetings fetch.");
+      return;
+    }
     let isMockMode = false;
     let interval;
-
     const fetchMeetings = async () => {
       if (isMockMode) return; // Stop fetching if we've fallen back to mock data
       try {
-        const response = await fetch(API_URL);
+        const response = await fetch(API_URL, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          });
         if (!response.ok) throw new Error('Failed to fetch');
         const data = await response.json();
 
@@ -201,14 +211,14 @@ function App() {
     return <ProjectInfoPage
       onBack={() => { setShowInfo(false); setShowLanding(true); }}
       onGetSoftware={() => { setShowInfo(false); setShowAbout(true); }}
-      onLaunch={() => { setLaunchSource('info'); setShowInfo(false); setShowLanding(false); }}
+      onLaunch={() => { setLaunchSource('info'); setShowInfo(false); setShowLanding(true); }}
     />;
   }
 
   if (showAbout) {
     return <AboutPage
       onBack={() => { setShowAbout(false); setShowLanding(true); }}
-      onLaunch={() => { setLaunchSource('about'); setShowAbout(false); setShowLanding(false); }}
+      onLaunch={() => { setLaunchSource("info"); setShowInfo(false); setShowLogin(true); }}
     />;
   }
 
@@ -216,35 +226,48 @@ function App() {
     return <FeaturesPage
       onBack={() => { setShowFeatures(false); setShowLanding(true); }}
       onGetSoftware={() => { setShowFeatures(false); setShowAbout(true); }}
-      onLaunch={() => { setLaunchSource('features'); setShowFeatures(false); setShowLanding(false); }}
+      onLaunch={() => { setLaunchSource("info"); setShowInfo(false); setShowLogin(true); }}
     />;
   }
 
   if (showDemo) {
     return <DemoPage
       onBack={() => { setShowDemo(false); setShowLanding(true); }}
-      onLaunch={() => { setLaunchSource('demo'); setShowDemo(false); setShowLanding(false); }}
+      onLaunch={() => { setLaunchSource("info"); setShowInfo(false); setShowLogin(true); }}
     />;
   }
 
   if (showPricing) {
     return <PricingPage
       onBack={() => { setShowPricing(false); setShowLanding(true); }}
-      onLaunch={() => { setLaunchSource('pricing'); setShowPricing(false); setShowLanding(false); }}
+      onLaunch={() => { setLaunchSource("info"); setShowInfo(false); setShowLogin(true); }}
     />;
   }
-
-  if (showLanding) {
-    return <LandingPage
-      onLaunch={() => { setLaunchSource('landing'); setShowLanding(false); }}
+  if (showLogin) {
+  return (
+    <Login
+      onBack={() => { setShowLogin(false); setShowLanding(true); }}
+      onSuccess={() => {
+        setShowLogin(false);
+        setShowLanding(false);
+        setCurrentView("meetings");
+      }}
+    />
+  );
+}
+  
+  if (!isAuthenticated) {
+  return (
+    <LandingPage
+      onLaunch={() => { setLaunchSource("landing"); setShowLogin(true); }}
       onAbout={() => setShowInfo(true)}
       onGetSoftware={() => setShowAbout(true)}
       onFeatures={() => setShowFeatures(true)}
       onWatchDemo={() => setShowDemo(true)}
       onPricing={() => setShowPricing(true)}
-    />;
-  }
-
+    />
+  );
+}
   return (
     <div className={`flex h-screen font-sans overflow-hidden print:h-auto print:overflow-visible print:bg-white print:text-black ${darkMode ? 'dark' : ''}`}>
       <div className="print:hidden">

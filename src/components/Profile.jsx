@@ -1,7 +1,9 @@
 import React from 'react';
 import { User, Mail, Briefcase, MapPin, Building2, Clock, Globe, Laptop, Smartphone, Activity, CalendarDays } from 'lucide-react';
+import { useAuth } from '../Auth/AuthContext';
 
 const Profile = () => {
+    const { logout } = useAuth();
     return (
         <div className="flex-1 w-full h-full overflow-y-auto bg-transparent transition-colors duration-200">
             <div className="w-full max-w-[100rem] mx-auto px-12 py-20 flex flex-col gap-12">
@@ -41,7 +43,7 @@ const Profile = () => {
                         <button className="px-8 py-4 bg-blue-600 text-white rounded-2xl text-lg font-medium shadow-sm hover:bg-blue-700 transition-colors w-full">
                             Edit Profile
                         </button>
-                        <button className="px-8 py-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-2xl text-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors w-full">
+                        <button onClick={logout} className="px-8 py-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-2xl text-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors w-full">
                             Sign Out
                         </button>
                     </div>
