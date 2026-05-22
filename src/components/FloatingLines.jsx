@@ -11,7 +11,7 @@ import {
     Clock
 } from 'three';
 
-import './FloatingLines.css';
+// Converted FloatingLines styling to Tailwind utility classes; removed external CSS import.
 
 const vertexShader = `
 precision highp float;
@@ -472,12 +472,12 @@ export default function FloatingLines({
     ]);
 
     return (
-        <div
-            ref={containerRef}
-            className="floating-lines-container"
-            style={{
-                mixBlendMode: mixBlendMode
-            }}
-        />
+      <div
+        ref={containerRef}
+        className="w-full h-full relative overflow-hidden"
+        style={{
+          mixBlendMode: mixBlendMode
+        }}
+      />
     );
 }

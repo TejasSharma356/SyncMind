@@ -1,7 +1,6 @@
 import { Renderer, Program, Mesh, Color, Triangle } from 'ogl';
 import { useEffect, useRef } from 'react';
 
-import './Aurora.css';
 
 const VERT = `#version 300 es
 in vec2 position;
@@ -198,5 +197,10 @@ export default function Aurora(props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [amplitude]);
 
-  return <div ref={ctnDom} className="aurora-container" />;
+  return (
+    <div
+      ref={ctnDom}
+      className="fixed inset-0 w-full h-full -z-10 pointer-events-none opacity-80 overflow-hidden dark:opacity-60"
+    />
+  );
 }
