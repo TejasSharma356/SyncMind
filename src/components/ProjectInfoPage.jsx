@@ -160,7 +160,8 @@ const CTAButton = memo(({ onClick, children, variant = 'primary', className = ''
 CTAButton.displayName = 'CTAButton';
 
 // ─── Feature Card ──────────────────────────────────────────────────────────────
-const FeatureCard = memo(({ icon: Icon, color, step, title, desc }) => {
+const FeatureCard = memo((props) => {
+  const { icon: Icon, color, step, title, desc } = props;
   const v = FEATURE_VARIANTS[color] ?? FEATURE_VARIANTS.blue;
   return (
     <article
@@ -213,7 +214,8 @@ const FeatureCard = memo(({ icon: Icon, color, step, title, desc }) => {
 FeatureCard.displayName = 'FeatureCard';
 
 // ─── Mission Card ──────────────────────────────────────────────────────────────
-const MissionCard = memo(({ icon: Icon, color, title, desc }) => {
+const MissionCard = memo((props) => {
+  const { icon: Icon, color, title, desc } = props;
   const v = MISSION_VARIANTS[color] ?? MISSION_VARIANTS.blue;
   return (
     <article

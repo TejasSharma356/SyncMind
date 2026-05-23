@@ -28,7 +28,6 @@ function App() {
   const [currentView, setCurrentView] = useState('meetings');
   const [previousView, setPreviousView] = useState(null);
   const [meetings, setMeetings] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [selectedMeetingId, setSelectedMeetingId] = useState(null);
   const [showLogin, setShowLogin] = useState(false);
   const { isAuthenticated, token } = useAuth();
@@ -79,7 +78,7 @@ function App() {
           return prev;
         });
       } finally {
-        setIsLoading(false);
+        // Fetch completed
       }
     };
 
@@ -88,7 +87,7 @@ function App() {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [token, API_URL]);
+  }, [token]);
 
 
   const handleDeleteMeeting = (meetingId) => {

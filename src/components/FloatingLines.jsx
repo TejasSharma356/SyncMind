@@ -277,7 +277,8 @@ export default function FloatingLines({
     const bottomLineDistance = enabledWaves.includes('bottom') ? getLineDistance('bottom') * 0.01 : 0.01;
 
     useEffect(() => {
-        if (!containerRef.current) return;
+        const currentContainer = containerRef.current;
+        if (!currentContainer) return;
 
         const scene = new Scene();
 
@@ -365,8 +366,8 @@ export default function FloatingLines({
         const clock = new Clock();
 
         const setSize = () => {
-            if (!containerRef.current) return; // Add check
-            const el = containerRef.current;
+            if (!currentContainer) return; // Add check
+            const el = currentContainer;
             const width = el.clientWidth || 1;
             const height = el.clientHeight || 1;
 
@@ -381,8 +382,8 @@ export default function FloatingLines({
 
         const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(setSize) : null;
 
-        if (ro && containerRef.current) {
-            ro.observe(containerRef.current);
+        if (ro && currentContainer) {
+            ro.observe(currentContainer);
         }
 
         const handlePointerMove = event => {
@@ -408,8 +409,8 @@ export default function FloatingLines({
         };
 
         if (interactive) {
-            containerRef.current.addEventListener('pointermove', handlePointerMove); // Attach to container
-            containerRef.current.addEventListener('pointerleave', handlePointerLeave);
+            currentContainer.addEventListener('pointermove', handlePointerMove); // Attach to container
+            currentContainer.addEventListener('pointerleave', handlePointerLeave);
         }
 
         let raf = 0;
@@ -436,14 +437,13 @@ export default function FloatingLines({
 
         return () => {
             cancelAnimationFrame(raf);
-            // eslint-disable-next-line react-hooks/exhaustive-deps
-            if (ro && containerRef.current) {
+            if (ro && currentContainer) {
                 ro.disconnect();
             }
 
-            if (interactive && containerRef.current) {
-                containerRef.current.removeEventListener('pointermove', handlePointerMove);
-                containerRef.current.removeEventListener('pointerleave', handlePointerLeave);
+            if (interactive && currentContainer) {
+                currentContainer.removeEventListener('pointermove', handlePointerMove);
+                currentContainer.removeEventListener('pointerleave', handlePointerLeave);
             }
 
             geometry.dispose();

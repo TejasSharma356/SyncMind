@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useContext, useMemo, useState } from "react";
 import { jwtDecode } from "jwt-decode";
 
 const AuthContext = createContext(null);
@@ -6,39 +6,54 @@ const AuthContext = createContext(null);
 const STORAGE_KEY = "syncmind_google_id_token";
 
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(() => localStorage.getItem(STORAGE_KEY) || "");
-
-  useEffect(() => {
-    if (token) {
-      localStorage.setItem(STORAGE_KEY, token);
-    } else {
-      localStorage.removeItem(STORAGE_KEY);
-    }
-  }, [token]);
-
-  const user = useMemo(() => {
-    if (token) {
+  const [auth, setAuth] = useState(() => {
+    const stored = localStorage.getItem(STORAGE_KEY) || "";
+    if (stored) {
       try {
-        const decoded = jwtDecode(token);
-        // Verify token is not expired (exp is in seconds)
+        const decoded = jwtDecode(stored);
         if (decoded.exp && decoded.exp * 1000 < Date.now()) {
-          return null;
+          localStorage.removeItem(STORAGE_KEY);
+          return { token: "", user: null };
         }
-        return decoded;
+        return { token: stored, user: decoded };
       } catch {
-        return null;
+        localStorage.removeItem(STORAGE_KEY);
+        return { token: "", user: null };
       }
     }
-    return null;
-  }, [token]);
+    return { token: "", user: null };
+  });
+
+  const { token, user } = auth;
+
+  const updateToken = (newToken) => {
+    if (newToken) {
+      try {
+        const decoded = jwtDecode(newToken);
+        if (decoded.exp && decoded.exp * 1000 < Date.now()) {
+          localStorage.removeItem(STORAGE_KEY);
+          setAuth({ token: "", user: null });
+        } else {
+          localStorage.setItem(STORAGE_KEY, newToken);
+          setAuth({ token: newToken, user: decoded });
+        }
+      } catch {
+        localStorage.removeItem(STORAGE_KEY);
+        setAuth({ token: "", user: null });
+      }
+    } else {
+      localStorage.removeItem(STORAGE_KEY);
+      setAuth({ token: "", user: null });
+    }
+  };
 
   const value = useMemo(
     () => ({
       token,
       user,
       isAuthenticated: Boolean(user),
-      setToken,
-      logout: () => setToken(""),
+      setToken: updateToken,
+      logout: () => updateToken(""),
     }),
     [token, user]
   );

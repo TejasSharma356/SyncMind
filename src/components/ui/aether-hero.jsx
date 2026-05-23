@@ -44,6 +44,35 @@ in vec2 position;
 void main(){ gl_Position = vec4(position, 0.0, 1.0); }
 `;
 
+const compileShader = (gl, src, type) => {
+    const sh = gl.createShader(type);
+    gl.shaderSource(sh, src);
+    gl.compileShader(sh);
+    if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
+        const info = gl.getShaderInfoLog(sh) || 'Unknown shader error';
+        gl.deleteShader(sh);
+        throw new Error(info);
+    }
+    return sh;
+};
+
+const createProgram = (gl, vs, fs) => {
+    const v = compileShader(gl, vs, gl.VERTEX_SHADER);
+    const f = compileShader(gl, fs, gl.FRAGMENT_SHADER);
+    const prog = gl.createProgram();
+    gl.attachShader(prog, v);
+    gl.attachShader(prog, f);
+    gl.linkProgram(prog);
+    gl.deleteShader(v);
+    gl.deleteShader(f);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+        const info = gl.getProgramInfoLog(prog) || 'Program link error';
+        gl.deleteProgram(prog);
+        throw new Error(info);
+    }
+    return prog;
+};
+
 const AetherHero = ({
     fragmentSource = DEFAULT_FRAG,
     dprMax = 2,
@@ -62,34 +91,7 @@ const AetherHero = ({
     const uniResRef = useRef(null);
     const rafRef = useRef(null);
 
-    const compileShader = (gl, src, type) => {
-        const sh = gl.createShader(type);
-        gl.shaderSource(sh, src);
-        gl.compileShader(sh);
-        if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
-            const info = gl.getShaderInfoLog(sh) || 'Unknown shader error';
-            gl.deleteShader(sh);
-            throw new Error(info);
-        }
-        return sh;
-    };
-
-    const createProgram = (gl, vs, fs) => {
-        const v = compileShader(gl, vs, gl.VERTEX_SHADER);
-        const f = compileShader(gl, fs, gl.FRAGMENT_SHADER);
-        const prog = gl.createProgram();
-        gl.attachShader(prog, v);
-        gl.attachShader(prog, f);
-        gl.linkProgram(prog);
-        gl.deleteShader(v);
-        gl.deleteShader(f);
-        if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
-            const info = gl.getProgramInfoLog(prog) || 'Program link error';
-            gl.deleteProgram(prog);
-            throw new Error(info);
-        }
-        return prog;
-    };
+    const [cc0, cc1, cc2, cc3] = clearColor;
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -119,7 +121,7 @@ const AetherHero = ({
 
         uniTimeRef.current = gl.getUniformLocation(prog, 'time');
         uniResRef.current = gl.getUniformLocation(prog, 'resolution');
-        gl.clearColor(clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
+        gl.clearColor(cc0, cc1, cc2, cc3);
 
         const fit = () => {
             const dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, dprMax));
@@ -156,7 +158,7 @@ const AetherHero = ({
             if (bufRef.current) gl.deleteBuffer(bufRef.current);
             if (programRef.current) gl.deleteProgram(programRef.current);
         };
-    }, [fragmentSource, dprMax]);
+    }, [fragmentSource, dprMax, cc0, cc1, cc2, cc3]);
 
     return (
         <section
