@@ -27,13 +27,13 @@ const Settings = ({ darkMode, toggleTheme }) => {
                                 </div>
                                 <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 p-2 rounded-xl">
                                     <button
-                                        onClick={() => !darkMode && toggleTheme()}
+                                        onClick={() => darkMode && toggleTheme()}
                                         className={`px-6 py-3 rounded-lg text-base font-medium transition-all ${!darkMode ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'}`}
                                     >
                                         Light
                                     </button>
                                     <button
-                                        onClick={() => darkMode && toggleTheme()}
+                                        onClick={() => !darkMode && toggleTheme()}
                                         className={`px-6 py-3 rounded-lg text-base font-medium transition-all ${darkMode ? 'bg-gray-700 shadow-sm text-white' : 'text-gray-500 hover:text-gray-900'}`}
                                     >
                                         Dark
