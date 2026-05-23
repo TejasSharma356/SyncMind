@@ -12,9 +12,10 @@ import {
     Copy,
     Download,
     ExternalLink,
-    CheckCircle2
+    CheckCircle2,
+    FileText 
 } from 'lucide-react';
-import AIInsightCard from './AIInsightCard';
+
 import TranscriptChat from './TranscriptChat';
 
 const MeetingDetails = ({ meeting, standalone = false, onBack, onDelete, onUpdate }) => {
