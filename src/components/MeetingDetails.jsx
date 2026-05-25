@@ -197,7 +197,7 @@ const MeetingDetails = ({ meeting, standalone = false, onBack, onDelete, onUpdat
             </div>
 
             {/* Content */}
-            <div className={`flex-1 overflow-y-auto p-8 space-y-10 print:overflow-visible print:h-auto print:p-0 print:space-y-6 ${standalone ? 'w-full scrollbar-hide' : ''}`}>
+            <div className={`flex-1 overflow-y-auto p-8 space-y-10 print:overflow-visible print:h-auto print:p-0 print:space-y-6 ${standalone ? 'w-full [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden' : ''}`}>
                 {/* Notes (If any) */}
                 {meeting.notes && (
                     <section>

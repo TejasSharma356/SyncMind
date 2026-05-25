@@ -11,8 +11,6 @@ import {
     Clock
 } from 'three';
 
-import './FloatingLines.css';
-
 const vertexShader = `
 precision highp float;
 
@@ -474,7 +472,7 @@ export default function FloatingLines({
     return (
         <div
             ref={containerRef}
-            className="floating-lines-container"
+            className="relative h-full w-full overflow-hidden"
             style={{
                 mixBlendMode: mixBlendMode
             }}
