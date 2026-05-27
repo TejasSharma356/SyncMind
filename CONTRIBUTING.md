@@ -50,18 +50,28 @@ We use standard labels to track issues. Look out for these when finding a task:
 ---
 
 ## 🎯 Roadmap & Open Tasks
-Looking for something to work on? Here are some tasks we need help with:
+Looking for something to work on? Here are some tasks we need help with. **All tasks listed below have been verified against the existing codebase and are confirmed NOT yet implemented.**
 
 ### 🟢 Easy (Good First Issues)
-- **UI Polishing:** Fix alignments, padding, and mobile responsiveness.
-- **Loading States:** Add animated skeleton loaders for data fetching.
-- **Dashboard Cards:** Improve the layout of the meeting summary cards.
-- **Icons:** Standardize and upgrade the `lucide-react` icons across the app.
+- **UI Polishing:** Fix alignments, padding, and ensure all React components render flawlessly on all mobile screen sizes.
+- **Loading States:** The dashboard currently has no loading feedback. Add animated skeleton loaders while meetings are being fetched from the API to prevent layout shifts.
+- **Empty State UI:** When no meetings exist in the list, show a well-designed empty state placeholder (illustration + message) instead of a blank panel.
+- **Standardize Icons:** Audit and standardize the use of `lucide-react` icons across all dashboard components for consistency.
+- **Meeting Duration Display:** Parse and display the total duration of each meeting in the `MeetingList` sidebar card (e.g., `45 min`).
 
 ### 🟡 Medium
-- **Dashboard Analytics:** Add charts or stats for meeting duration and frequency.
-- **Theme Support:** Perfect the Dark/Light mode toggle and ensure contrast ratios.
+- **Date Filtering:** Add a date range picker or filter buttons (Today, Last 7 Days, Last 30 Days) above the meeting list to quickly narrow down past meetings.
+- **Speaker Name Mapping:** Allow users to rename "Speaker 1", "Speaker 2", etc. to actual participant names within the `TranscriptChat` component, which should persist locally.
+- **Export as Markdown:** Enhance the existing "Export as PDF" button (currently uses `window.print()`) to also offer a proper Markdown `.md` file export of the full transcript and action items.
+- **Transcript Word-level Timestamps:** Display a timestamp badge (e.g., `[00:03:12]`) for each speaker block in `TranscriptChat` using timestamp data from the AWS pipeline.
+- **Action Item Persistence:** Action item checkboxes currently reset on every page load. Wire the checked state to `localStorage` or, ideally, back to DynamoDB via an API PATCH call so the state persists across sessions.
+- **Insights Analytics Dashboard:** The current Insights page simply lists cards per meeting. Upgrade it with cross-meeting analytics — e.g., recurring topics, most active speakers, and a weekly action item completion rate chart (using `recharts` or `Chart.js`).
+- **Notification System:** The Settings page has notification checkboxes (Meeting Processed, Action Items Reminder) that do nothing. Implement browser push notifications using the Notifications API and wire them up to the existing Settings UI toggles.
 
 ### 🔴 Hard
-- **Electron UI Overlay Widget:** Build a seamless, hovering, or transparent widget for the desktop app that stays on top of other windows while recording, providing a minimal and unobtrusive footprint.
-- **Backend Refactoring:** Optimize the AWS Lambda functions for faster processing and lower memory usage.
+- **Google OAuth Multi-Tenant Architecture:** Bridge the existing frontend Google Auth flow (PR #26) to the AWS Lambda backend to scope meeting data per user. This requires adding a `userId` field to the DynamoDB schema and updating all Lambda functions to filter by the authenticated user.
+- **Transcript Sentiment Analysis:** Run per-speaker sentiment scoring across transcript blocks and display a visual "mood timeline" on the Meeting Details page, giving a bird's-eye view of how meeting energy changed over time.
+- **Electron UI Overlay Widget:** Build a transparent, always-on-top, click-through floating widget for the desktop app (using Electron's `setIgnoreMouseEvents` + frameless window) that hovers over any meeting call to show live recording status and action item count without interrupting the call.
+- **Live Audio Playback Sync:** Add an embedded audio player to the `MeetingDetails` view that streams the S3 audio file and highlights the corresponding transcript speaker block in real time as playback progresses.
+- **PWA (Progressive Web App) Support:** Convert the web dashboard into a Progressive Web App so it is installable on desktop/mobile and caches the latest meeting data for offline viewing using a Service Worker.
+- **Slack / Notion Auto-Push:** Implement the backend for the Slack integration stub in `Settings.jsx` so that after a meeting is processed, a formatted summary and action items are automatically pushed to a configured Slack channel or Notion page.
