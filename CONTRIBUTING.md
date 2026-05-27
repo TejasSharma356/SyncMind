@@ -6,27 +6,35 @@ Since SyncMind operates on a multi-part architecture (Web Dashboard, AWS Pipelin
 
 ## 🚀 How to Contribute
 
-### 1. Setup Your Local Environment
+### 1. Claiming an Issue
+Before you start working or open a Pull Request, please ensure you are officially assigned to an issue:
+- **Check if the issue is assigned**: Look at the "Assignees" section on the GitHub issue.
+- **If it is NOT assigned**: Drop a comment asking to be assigned. Wait for a maintainer to assign it to you before starting work.
+- **If it IS assigned**: Check if there is already an open PR for it. If there is no open PR (or it's been inactive), you can drop a comment asking if you can be assigned to it instead.
+> **⚠️ Note:** We will close Pull Requests from contributors who were not assigned to the related issue.
+
+### 2. Setup Your Local Environment
 Follow the instructions in the `README.md` to set up the Web Dashboard or the Desktop Client.
 
-### 2. Branch Naming Conventions
+### 3. Branch Naming Conventions
 Create a new branch from `main` (for web) or `electron-recorder` (for desktop) before making any changes. Use descriptive prefixes:
 - `feat/add-authentication`
 - `fix/navbar-responsive-bug`
 - `docs/update-readme`
 - `refactor/improve-api-handling`
 
-### 3. Coding Standards
+### 4. Coding Standards
 - **UI Components**: Keep them modular and reuse existing Tailwind utility classes where possible.
 - **Responsiveness**: Ensure mobile responsiveness for all web dashboard tasks.
 - **Architecture Integrity**: Do not bypass the AWS pipeline or hardcode mock data in production builds. The frontend dashboard must only read from the secure API Gateway.
 - **Clean Code**: Remove unnecessary `console.log`s, keep formatting clean, and use meaningful variable names.
 
-### 4. Pull Request Process
+### 5. Pull Request Process
 1. Fork the repository and create your feature branch.
 2. Commit your changes with meaningful messages (e.g., `feat: Add some AmazingFeature`).
 3. Push your branch to your fork.
-4. Open a Pull Request! Please specify in the PR description if your changes target the `frontend`, `electron`, or `aws` architecture.
+4. Open a Pull Request! 
+   - **PR Template**: GitHub will automatically populate your PR description using our template (located at `.github/pull_request_template.md`). Please fill it out completely, and remember to link the issue you were assigned to.
 
 ---
 
