@@ -3,6 +3,7 @@ import Sidebar from './components/Sidebar';
 import MeetingList from './components/MeetingList';
 import MeetingDetails from './components/MeetingDetails';
 import Insights from './components/Insights';
+import AnalyticsPage from './components/AnalyticsPage';
 import Settings from './components/Settings';
 import Profile from './components/Profile';
 import LandingPage from './components/LandingPage';
@@ -26,7 +27,7 @@ function App() {
   const [currentView, setCurrentView] = useState('meetings');
   const [previousView, setPreviousView] = useState(null);
   const [meetings, setMeetings] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [, setIsLoading] = useState(true);
   const [selectedMeetingId, setSelectedMeetingId] = useState(null);
 
   // Derive the selected meeting
@@ -36,8 +37,28 @@ function App() {
     let isMockMode = false;
     let interval;
 
+    const loadMockMeetings = () => {
+      isMockMode = true; // Mark as mock mode
+      if (interval) clearInterval(interval); // Clear the polling loop so edits persist
+
+      const sortedMockData = [...mockMeetings].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setMeetings(sortedMockData);
+      setSelectedMeetingId(prev => {
+        if (!prev && sortedMockData.length > 0) {
+          return sortedMockData[0].meetingId;
+        }
+        return prev;
+      });
+    };
+
     const fetchMeetings = async () => {
       if (isMockMode) return; // Stop fetching if we've fallen back to mock data
+      if (!API_URL) {
+        loadMockMeetings();
+        setIsLoading(false);
+        return;
+      }
+
       try {
         const response = await fetch(API_URL);
         if (!response.ok) throw new Error('Failed to fetch');
@@ -55,19 +76,8 @@ function App() {
           return prev;
         });
       } catch (err) {
-        console.error("Failed to fetch meetings. Using mock data for local testing.", err);
-        isMockMode = true; // Mark as mock mode
-        if (interval) clearInterval(interval); // Clear the polling loop so edits persist
-        
-        // Use mock data as fallback
-        const sortedMockData = [...mockMeetings].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        setMeetings(sortedMockData);
-        setSelectedMeetingId(prev => {
-          if (!prev && sortedMockData.length > 0) {
-            return sortedMockData[0].meetingId;
-          }
-          return prev;
-        });
+        console.warn("Failed to fetch meetings. Using mock data for local testing.", err);
+        loadMockMeetings();
       } finally {
         setIsLoading(false);
       }
@@ -126,6 +136,8 @@ function App() {
             setCurrentView('meeting_detail');
           }}
         />;
+      case 'analytics':
+        return <AnalyticsPage meetings={meetings} darkMode={darkMode} />;
       case 'meeting_detail':
         return (
           <div className="w-full h-full print:h-auto print:block">

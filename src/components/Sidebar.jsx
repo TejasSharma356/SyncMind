@@ -1,10 +1,11 @@
 import React from 'react';
-import { LayoutGrid, Lightbulb, Settings, User, Video, ArrowLeft } from 'lucide-react';
+import { Lightbulb, Settings, User, Video, ArrowLeft, BarChart3 } from 'lucide-react';
 
 const Sidebar = ({ activeView, onNavigate, onNavigateBack, onNavigateHome }) => {
     const menuItems = [
         { id: 'meetings', icon: Video, label: 'Meetings' },
         { id: 'insights', icon: Lightbulb, label: 'Insights' },
+        { id: 'analytics', icon: BarChart3, label: 'Analytics' },
         { id: 'settings', icon: Settings, label: 'Settings' },
         { id: 'profile', icon: User, label: 'Profile' },
     ];

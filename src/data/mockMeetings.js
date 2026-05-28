@@ -34,5 +34,23 @@ export const mockMeetings = [
         action_items: [
             { task: 'Update auth endpoints in API specs', owner: 'Alice' }
         ]
+    },
+    {
+        meetingId: 'm3',
+        title: 'Product Review: Analytics Planning',
+        summary: 'Discussed dashboard metrics, chart priorities, and follow-up ownership.',
+        createdAt: new Date(Date.now() - 3 * 86400000).toISOString(), // 3 days ago
+        transcript: "Speaker 1: The dashboard needs a clearer overview of meeting load. Speaker 2: Frequency should be the first chart because it answers the most common question quickly. Speaker 3: We should also show action item ownership so users can spot follow-up patterns. Speaker 1: Great, let's keep the first version simple and responsive.",
+        key_points: [
+            'Prioritized meeting frequency as the primary analytics chart.',
+            'Agreed to include action item ownership as a lightweight participant signal.'
+        ],
+        insights: [
+            { text: 'Users benefit from quick visibility into meeting volume and follow-up ownership.' }
+        ],
+        action_items: [
+            { task: 'Validate analytics layout on mobile screens', owner: 'Bob' },
+            { task: 'Review chart readability in dark mode', owner: 'Charlie' }
+        ]
     }
 ];
