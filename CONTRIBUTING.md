@@ -65,7 +65,6 @@ Looking for something to work on? Here are some tasks we need help with. **All t
 - **Export as Markdown:** Enhance the existing "Export as PDF" button (currently uses `window.print()`) to also offer a proper Markdown `.md` file export of the full transcript and action items.
 - **Transcript Word-level Timestamps:** Display a timestamp badge (e.g., `[00:03:12]`) for each speaker block in `TranscriptChat` using timestamp data from the AWS pipeline.
 - **Action Item Persistence:** Action item checkboxes currently reset on every page load. Wire the checked state to `localStorage` or, ideally, back to DynamoDB via an API PATCH call so the state persists across sessions.
-- **Insights Analytics Dashboard:** The current Insights page simply lists cards per meeting. Upgrade it with cross-meeting analytics — e.g., recurring topics, most active speakers, and a weekly action item completion rate chart (using `recharts` or `Chart.js`).
 - **Notification System:** The Settings page has notification checkboxes (Meeting Processed, Action Items Reminder) that do nothing. Implement browser push notifications using the Notifications API and wire them up to the existing Settings UI toggles.
 
 ### 🔴 Hard
