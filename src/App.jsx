@@ -13,10 +13,23 @@ import FeaturesPage from './components/FeaturesPage';
 import DemoPage from './components/DemoPage';
 import PricingPage from './components/PricingPage';
 import Aurora from './components/Aurora';
+import ErrorBoundary from './components/ErrorBoundary';
 import { mockMeetings } from './data/mockMeetings';
+import { logout, isFirebaseInitialized, getFirebaseError } from './firebase';
 
 const API_URL = import.meta.env.VITE_API_URL;
+const FIREBASE_ERROR = getFirebaseError();
+
 function App() {
+  // Log Firebase status on app load
+  useEffect(() => {
+    const fbInitialized = isFirebaseInitialized();
+    if (!fbInitialized) {
+      console.warn('[App] Firebase is not initialized. Running in demo mode with mock data only.');
+    } else {
+      console.log('[App] Firebase initialized successfully');
+    }
+  }, []);
   const [showLanding, setShowLanding] = useState(true);
   const [showAbout, setShowAbout] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
@@ -157,7 +170,12 @@ function App() {
       case 'settings':
         return <Settings darkMode={darkMode} toggleTheme={toggleTheme} />;
       case 'profile':
-        return <Profile />;
+        return (
+          <Profile
+            onLogout={logout}
+            setCurrentView={setCurrentView}
+          />
+        );
       case 'meetings':
       default:
         return (
@@ -259,6 +277,21 @@ function App() {
 
   return (
     <div className={`flex h-screen font-sans overflow-hidden print:h-auto print:overflow-visible print:bg-white print:text-black ${darkMode ? 'dark' : ''}`}>
+      {/* Firebase Error Banner */}
+      {FIREBASE_ERROR && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-yellow-900/80 border-b border-yellow-600 backdrop-blur-sm p-3">
+          <div className="max-w-6xl mx-auto flex items-center justify-between text-yellow-100 text-sm">
+            <span>⚠️ Firebase not initialized. Running in demo mode with mock data. Check .env configuration.</span>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-3 py-1 bg-yellow-700 hover:bg-yellow-600 rounded text-white text-xs font-medium transition-colors"
+            >
+              Reload
+            </button>
+          </div>
+        </div>
+      )}
+      
       <div className="print:hidden">
         <Aurora
           colorStops={["#cf66ff", "#70aef0", "#e50649"]}
@@ -287,4 +320,10 @@ function App() {
   );
 }
 
-export default App;
+export default function AppWithErrorBoundary() {
+  return (
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
+  );
+}
