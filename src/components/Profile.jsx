@@ -1,10 +1,112 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { User, Mail, Briefcase, MapPin, Building2, Clock, Globe, Laptop, Smartphone, Activity, CalendarDays } from 'lucide-react';
+import EditProfileModal from './EditProfileModal';
 
-const Profile = () => {
+const Profile = ({ onLogout, setCurrentView }) => {
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [profileData, setProfileData] = useState({
+        name: 'Tejas Sharma',
+        email: 'tejas.sharma@syncmind.app',
+        title: 'Product Manager',
+        location: 'San Francisco, CA',
+        department: 'Product & Engineering',
+        phone: '+1 (555) 123-4567',
+    });
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState(null);
+
+    // Handle Edit Profile Button
+    const handleEditProfile = useCallback(() => {
+        try {
+            console.log('Edit Profile button clicked');
+            console.log('Current profile data:', profileData);
+            setShowEditModal(true);
+        } catch (err) {
+            console.error('Error opening edit profile modal:', err);
+            setError('Failed to open edit profile');
+        }
+    }, [profileData]);
+
+    // Handle Profile Save
+    const handleSaveProfile = useCallback(async (updatedData) => {
+        try {
+            console.log('Saving profile with data:', updatedData);
+            setIsLoading(true);
+            
+            // Update local state
+            setProfileData(updatedData);
+            
+            // Here you would typically send data to backend/Firebase
+            // await updateUserProfile(updatedData);
+            
+            console.log('Profile saved successfully');
+            setShowEditModal(false);
+            setError(null);
+        } catch (err) {
+            const errorMsg = err.message || 'Failed to save profile';
+            console.error('Error saving profile:', err);
+            setError(errorMsg);
+            throw err;
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+    // Handle Sign Out Button
+    const handleSignOut = useCallback(async () => {
+        try {
+            console.log('Sign Out button clicked');
+            setIsLoading(true);
+            
+            if (!onLogout) {
+                throw new Error('Logout handler not provided');
+            }
+            
+            console.log('Calling logout function...');
+            await onLogout();
+            
+            console.log('User logged out successfully');
+            
+            // Reset profile data
+            setProfileData({
+                name: 'Tejas Sharma',
+                email: 'tejas.sharma@syncmind.app',
+                title: 'Product Manager',
+                location: 'San Francisco, CA',
+                department: 'Product & Engineering',
+                phone: '+1 (555) 123-4567',
+            });
+            
+            // Navigate to landing/home page
+            if (setCurrentView) {
+                console.log('Redirecting to home page...');
+                setCurrentView('landing');
+            }
+        } catch (err) {
+            const errorMsg = err.message || 'Failed to sign out';
+            console.error('Error during sign out:', err);
+            setError(errorMsg);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [onLogout, setCurrentView]);
+
     return (
         <div className="flex-1 w-full h-full overflow-y-auto bg-transparent transition-colors duration-200">
             <div className="w-full max-w-[100rem] mx-auto px-12 py-20 flex flex-col gap-12">
+
+                {/* Error Message Display */}
+                {error && (
+                    <div className="p-4 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-700 rounded-xl text-red-700 dark:text-red-400 flex items-center gap-3">
+                        <span className="text-lg font-medium">{error}</span>
+                        <button
+                            onClick={() => setError(null)}
+                            className="ml-auto text-red-700 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 font-bold text-xl"
+                        >
+                            ✕
+                        </button>
+                    </div>
+                )}
 
                 <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-4">
                     <User className="text-gray-400 dark:text-gray-500" size={40} />
@@ -38,11 +140,19 @@ const Profile = () => {
                     </div>
 
                     <div className="flex flex-col gap-4 w-full md:w-auto mt-6 md:mt-0">
-                        <button className="px-8 py-4 bg-blue-600 text-white rounded-2xl text-lg font-medium shadow-sm hover:bg-blue-700 transition-colors w-full">
-                            Edit Profile
+                        <button
+                            onClick={handleEditProfile}
+                            disabled={isLoading}
+                            className="px-8 py-4 bg-blue-600 text-white rounded-2xl text-lg font-medium shadow-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors w-full"
+                        >
+                            {isLoading ? 'Loading...' : 'Edit Profile'}
                         </button>
-                        <button className="px-8 py-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-2xl text-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors w-full">
-                            Sign Out
+                        <button
+                            onClick={handleSignOut}
+                            disabled={isLoading}
+                            className="px-8 py-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-2xl text-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors w-full"
+                        >
+                            {isLoading ? 'Signing Out...' : 'Sign Out'}
                         </button>
                     </div>
                 </div>
@@ -165,6 +275,14 @@ const Profile = () => {
                 </div>
 
             </div>
+
+            {/* Edit Profile Modal */}
+            <EditProfileModal
+                isOpen={showEditModal}
+                onClose={() => setShowEditModal(false)}
+                currentUser={profileData}
+                onSave={handleSaveProfile}
+            />
         </div>
     );
 };
