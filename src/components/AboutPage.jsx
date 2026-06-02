@@ -2,13 +2,13 @@ import React from 'react';
 import { ArrowLeft, Download, Mic, Brain, Zap, Shield, Monitor, ArrowRight, Github, ExternalLink } from 'lucide-react';
 import { GLSLHills } from './ui/glsl-hills';
 
-const DOWNLOAD_URL = 'https://github.com/Boomerforlife/SyncMind_Electron/releases/download/v1.0.0/SyncMind.Setup.1.0.0.exe';
+const DOWNLOAD_URL = '/SyncMind_Setup.exe';
 
 const AboutPage = ({ onBack, onLaunch }) => {
     const handleDownload = () => {
         const link = document.createElement('a');
         link.href = DOWNLOAD_URL;
-        link.setAttribute('download', 'SyncMind.Setup.1.0.0.exe');
+        link.setAttribute('download', 'SyncMind_Setup.exe');
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);

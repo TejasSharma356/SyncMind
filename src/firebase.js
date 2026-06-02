@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, setPersistence, browserSessionPersistence } from "firebase/auth";
 
 // Your web app's Firebase configuration
 // Replace these with your actual Firebase project settings in the .env file
@@ -38,6 +38,13 @@ try {
 
     // Initialize Firebase Auth
     auth = getAuth(app);
+    setPersistence(auth, browserSessionPersistence)
+        .then(() => {
+            console.log('[Firebase] Session persistence set to browserSessionPersistence successfully');
+        })
+        .catch((error) => {
+            console.error('[Firebase] Failed to set session persistence:', error);
+        });
     console.log('[Firebase] Firebase Auth initialized successfully');
 
     googleProvider = new GoogleAuthProvider();
