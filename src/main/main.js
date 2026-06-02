@@ -70,7 +70,7 @@ let globalAuthToken = "";
 let meetingStartTime = null;
 
 ipcMain.handle('get-web-app-url', () => {
-    return process.env.VITE_WEB_APP_URL || 'https://sync-mind.vercel.app';
+    return process.env.VITE_WEB_APP_URL || 'https://sync-mind-test.vercel.app';
 });
 
 ipcMain.handle('open-external', (event, url) => {
