@@ -12,7 +12,7 @@ export default defineConfig({
     minify: 'esbuild',
   },
   server: {
-    port: 5173,
+    port: 5180,
     strictPort: true,
   },
   plugins: [react()],

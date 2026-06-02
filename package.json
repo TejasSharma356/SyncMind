@@ -5,12 +5,11 @@
   "author": "SyncMind Team",
   "main": "src/main/main.js",
   "scripts": {
-    "dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
+    "dev": "concurrently \"vite\" \"wait-on http://localhost:5180 && electron .\"",
     "build": "vite build",
     "dist": "npm run build && electron-builder"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.1004.0",
     "@aws-sdk/client-transcribe-streaming": "^3.1003.0",
     "dotenv": "^17.3.1",
     "lucide-react": "^0.344.0",

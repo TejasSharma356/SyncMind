@@ -7,6 +7,8 @@ contextBridge.exposeInMainWorld('api', {
 
     // Window
     toggleFloatingMode: () => ipcRenderer.invoke('toggle-floating-mode'),
+    // openExternal is routed via IPC — shell.openExternal must run in main process
+    openExternal: (url) => ipcRenderer.invoke('open-external', url),
 
     // Audio streaming
     startAudio: () => ipcRenderer.send('start-audio'),
@@ -18,6 +20,8 @@ contextBridge.exposeInMainWorld('api', {
 
     // Auth
     setAuthToken: (token) => ipcRenderer.send('set-auth-token', token),
+    // Preload runs in Node context — read process.env directly, no IPC needed
+    getWebAppUrl: () => process.env.VITE_WEB_APP_URL || 'https://sync-mind.vercel.app',
 
     // Events from main
     onAudioStatus: (callback) => {
@@ -31,6 +35,14 @@ contextBridge.exposeInMainWorld('api', {
     onTranscriptUpdated: (callback) => {
         ipcRenderer.removeAllListeners('transcript-updated');
         ipcRenderer.on('transcript-updated', (event, text) => callback(text));
+    },
+    onUploadStatus: (callback) => {
+        ipcRenderer.removeAllListeners('upload-status');
+        ipcRenderer.on('upload-status', (event, data) => callback(data));
+    },
+    onAuthTokenReceived: (callback) => {
+        ipcRenderer.removeAllListeners('auth-token-received');
+        ipcRenderer.on('auth-token-received', (event, token) => callback(token));
     },
 
     // Logger

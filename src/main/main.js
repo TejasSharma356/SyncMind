@@ -1,4 +1,4 @@
-const { app, BrowserWindow, BrowserView, ipcMain, desktopCapturer, dialog } = require('electron');
+const { app, BrowserWindow, BrowserView, ipcMain, desktopCapturer, dialog, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const dotenv = require('dotenv');
@@ -10,10 +10,56 @@ const envPath = app.isPackaged
 
 dotenv.config({ path: envPath });
 
+const http = require('http');
 const { spawn } = require('child_process');
-const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 
 let mainWindow;
+let lastHeartbeatTime = 0;
+let loginRequestActive = false;
+let localServer = null;
+
+// Start a tiny local HTTP server on port 5185 for communicating with already open web pages
+function startLocalServer() {
+    localServer = http.createServer((req, res) => {
+        // Enable CORS for localhost web app
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Headers', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+        
+        if (req.method === 'OPTIONS') {
+            res.writeHead(200);
+            res.end();
+            return;
+        }
+
+        try {
+            const parsedUrl = new URL(req.url, 'http://localhost');
+            if (parsedUrl.pathname === '/heartbeat') {
+                lastHeartbeatTime = Date.now();
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ 
+                    status: 'ok', 
+                    loginRequested: loginRequestActive 
+                }));
+                
+                // Reset flag once consumed by the web client
+                if (loginRequestActive) {
+                    loginRequestActive = false;
+                }
+                return;
+            }
+        } catch (err) {
+            console.error('[LOCAL SERVER ERROR]', err);
+        }
+
+        res.writeHead(404);
+        res.end();
+    });
+
+    localServer.listen(5185, '127.0.0.1', () => {
+        console.log('[LOCAL SERVER] Running on http://127.0.0.1:5185');
+    });
+}
 
 // Meeting Logger Path
 const logFilePath = path.join(app.getPath('userData'), 'meeting_log.txt');
@@ -22,6 +68,23 @@ ipcMain.handle('get-whisper-mode', () => false);
 
 let globalAuthToken = "";
 let meetingStartTime = null;
+
+ipcMain.handle('get-web-app-url', () => {
+    return process.env.VITE_WEB_APP_URL || 'https://sync-mind.vercel.app';
+});
+
+ipcMain.handle('open-external', (event, url) => {
+    // If a heartbeat was received recently, the website is open. Signal it to log in.
+    if (Date.now() - lastHeartbeatTime < 3000) {
+        console.log('[LOCAL SERVER] Existing web tab detected. Directing to login in-place.');
+        loginRequestActive = true;
+        return true;
+    }
+    
+    // Otherwise open a new browser window/tab
+    console.log('[LOCAL SERVER] No active web tab detected. Opening new browser tab.');
+    return shell.openExternal(url);
+});
 
 ipcMain.on("set-auth-token", (e, token) => {
     globalAuthToken = token;
@@ -47,10 +110,15 @@ function createWindow() {
         mainWindow.show();
     });
 
+    mainWindow.on('closed', () => {
+        mainWindow = null;
+        globalAuthToken = "";
+    });
+
     // Load Vite dev server if in development, else load local file
     const isDev = !app.isPackaged && process.env.NODE_ENV !== 'production';
     if (isDev) {
-        mainWindow.loadURL('http://localhost:5173');
+        mainWindow.loadURL('http://localhost:5180');
         mainWindow.webContents.openDevTools();
     } else {
         // Use app.getAppPath() instead of __dirname to correctly resolve
@@ -59,8 +127,66 @@ function createWindow() {
     }
 }
 
-app.whenReady().then(() => {
-    createWindow();
+// ----------------------------------------------------
+// DEEP LINKING: Custom Protocol Handler (syncmind://)
+// ----------------------------------------------------
+if (process.defaultApp) {
+    if (process.argv.length >= 2) {
+        app.setAsDefaultProtocolClient('syncmind', process.execPath, [path.resolve(process.argv[1])]);
+    }
+} else {
+    app.setAsDefaultProtocolClient('syncmind');
+}
+
+const handleDeepLink = (url) => {
+    console.log('[DEEP LINK] Received URL:', url);
+    if (!url || url.startsWith('--')) return;
+    try {
+        const parsedUrl = new URL(url);
+        if (parsedUrl.protocol === 'syncmind:' && parsedUrl.hostname === 'auth') {
+            const token = parsedUrl.searchParams.get('token');
+            const refreshToken = parsedUrl.searchParams.get('refreshToken') || '';
+            const apiKey = parsedUrl.searchParams.get('apiKey') || '';
+            
+            if (token) {
+                console.log('[DEEP LINK] Token and metadata extracted successfully.');
+                globalAuthToken = token;
+                if (mainWindow) {
+                    if (mainWindow.isMinimized()) mainWindow.restore();
+                    mainWindow.focus();
+                    mainWindow.webContents.send('auth-token-received', { token, refreshToken, apiKey });
+                }
+            }
+        }
+    } catch (err) {
+        console.error('[DEEP LINK] Failed to parse deep link:', err);
+    }
+};
+
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) {
+    app.quit();
+} else {
+    app.on('second-instance', (event, commandLine, workingDirectory) => {
+        // Someone tried to run a second instance, we should focus our window.
+        if (mainWindow) {
+            if (mainWindow.isMinimized()) mainWindow.restore();
+            mainWindow.focus();
+        }
+        // Windows deep linking
+        const url = commandLine.pop();
+        handleDeepLink(url);
+    });
+
+    app.whenReady().then(() => {
+        createWindow();
+        startLocalServer();
+
+        // macOS deep linking (app is already running)
+        app.on('open-url', (event, url) => {
+            event.preventDefault();
+            handleDeepLink(url);
+        });
 
     // CRASH DIAGNOSTIC: Log renderer crash reason to main process terminal
     app.on('render-process-gone', (event, webContents, details) => {
@@ -76,8 +202,12 @@ app.whenReady().then(() => {
         }
     });
 });
+} // <-- ADDED THIS BRACE
 
 app.on('window-all-closed', () => {
+    if (localServer) {
+        localServer.close();
+    }
     if (process.platform !== 'darwin') {
         app.quit();
     }
@@ -130,45 +260,77 @@ ipcMain.on('audio-chunk', (event, payload) => {
 });
 
 async function uploadToS3(filePath, fileName) {
-    const s3Client = new S3Client({
-        region: process.env.AWS_REGION || "us-east-1",
-        credentials: {
-            accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-        }
-    });
-    const bucketName = process.env.S3_BUCKET_NAME || process.env.AWS_S3_BUCKET || "syncmind-meeting-audio";
-
     try {
-        console.log(`[S3 DEBUG] Checking credentials... Has AccessKey: ${!!process.env.AWS_ACCESS_KEY_ID}, Has SecretKey: ${!!process.env.AWS_SECRET_ACCESS_KEY}, Region: ${process.env.AWS_REGION}`);
-
         const fileBuffer = fs.readFileSync(filePath);
-        const uploadParams = {
-            Bucket: bucketName,
-            Key: `Audio/${fileName}`,
-            Body: fileBuffer,
-            ContentType: 'audio/wav'
-        };
+        const apiEndpoint = process.env.VITE_API_URL;
+        if (!apiEndpoint) {
+            console.error('[UPLOAD] VITE_API_URL is not set in .env file. Aborting upload.');
+            if (mainWindow) mainWindow.webContents.send('upload-status', { status: 'error', message: 'API URL not configured. Check .env file.' });
+            return;
+        }
+        
+        console.log(`[UPLOAD] Requesting Presigned URL from ${apiEndpoint}...`);
+        if (mainWindow) {
+            mainWindow.webContents.send('upload-status', { status: 'requesting', message: 'Securing upload slot from cloud...' });
+        }
+        
+        // 1. Get Presigned URL from API Gateway
+        const presignResponse = await global.fetch(`${apiEndpoint}?action=getPresignedUrl&fileName=${encodeURIComponent(fileName)}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${globalAuthToken}`
+            }
+        });
 
-        console.log(`[S3 UPLOAD] started: Uploading ${fileName} to ${bucketName}...`);
-        await s3Client.send(new PutObjectCommand(uploadParams));
-        console.log("[S3 UPLOAD] completed");
+        if (!presignResponse.ok) {
+            throw new Error(`Failed to get presigned URL: ${presignResponse.status} ${presignResponse.statusText}`);
+        }
 
-        // Show success dialog in production
+        const data = await presignResponse.json();
+        const presignedUrl = data.uploadUrl;
+
+        if (!presignedUrl) {
+            throw new Error("API did not return a valid presigned URL.");
+        }
+
+        console.log(`[UPLOAD] Received Presigned URL. Uploading audio securely to S3...`);
+        if (mainWindow) {
+            mainWindow.webContents.send('upload-status', { status: 'uploading', message: 'Uploading audio to AWS S3 securely...' });
+        }
+        
+        // 2. Upload file directly to S3 using the Presigned URL
+        const uploadResponse = await global.fetch(presignedUrl, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'audio/wav'
+            },
+            body: fileBuffer
+        });
+
+        if (!uploadResponse.ok) {
+            throw new Error(`Failed to upload to S3: ${uploadResponse.status} ${uploadResponse.statusText}`);
+        }
+
+        console.log("[UPLOAD] completed successfully");
+        if (mainWindow) {
+            mainWindow.webContents.send('upload-status', { status: 'success', message: 'Upload complete! Cloud processing started...' });
+        }
+
         if (app.isPackaged) {
             dialog.showMessageBox(mainWindow, {
                 type: 'info',
                 title: 'Upload Success',
-                message: `Successfully uploaded ${fileName} to S3!`
+                message: `Successfully uploaded ${fileName}!`
             });
         }
         return true;
     } catch (err) {
-        console.error("[S3 UPLOAD ERROR] Failed to upload audio:", err);
-
-        // Show error dialog in production
+        console.error("[UPLOAD ERROR] Failed to upload audio:", err);
+        if (mainWindow) {
+            mainWindow.webContents.send('upload-status', { status: 'error', message: `Upload failed: ${err.message}` });
+        }
         if (app.isPackaged) {
-            dialog.showErrorBox("S3 Upload Failed", `Error: ${err.message}\n\nCheck if AWS keys are valid and internet is connected.`);
+            dialog.showErrorBox("Upload Failed", `Error: ${err.message}\n\nMake sure you are logged in and have an active internet connection.`);
         }
         return false;
     }
@@ -227,12 +389,11 @@ ipcMain.on('stop-audio', async (event) => {
     // Use the stored sampleRate from the renderer
     const actualSampleRate = sampleRate || 48000;
 
-    // combinedBuffer contains raw bytes of Float32 samples
-    const float32Array = new Float32Array(
-        combinedBuffer.buffer,
-        combinedBuffer.byteOffset,
-        combinedBuffer.length / Float32Array.BYTES_PER_ELEMENT
-    );
+    // Node.js Buffers are Uint8Arrays that can be views into shared pool ArrayBuffers.
+    // Creating a fresh Uint8Array guarantees a new, perfectly aligned and isolated ArrayBuffer
+    // that does not contain any garbage data from the Node.js buffer allocation pool.
+    const alignedBuffer = new Uint8Array(combinedBuffer).buffer;
+    const float32Array = new Float32Array(alignedBuffer);
 
     console.log(`[AUDIO MAIN] Converting ${float32Array.length} samples to Int16...`);
 
@@ -261,42 +422,7 @@ ipcMain.on('stop-audio', async (event) => {
     const uploaded = await uploadToS3(filePath, fileName);
 
     if (uploaded) {
-        // Trigger Next.js API
-        const apiEndpoint = process.env.NEXTJS_API_ENDPOINT || 'http://localhost:3001/api/process-meeting';
-        console.log(`[API] Triggering backend API: ${apiEndpoint} for ${fileName}`);
-
-        let attempts = 0;
-        let success = false;
-
-        while (attempts < 3 && !success) {
-            try {
-                // We use standard fetch available in Node.js 18+ (Electron 29 supports global fetch)
-                const response = await global.fetch(apiEndpoint, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${globalAuthToken}`
-                    },
-                    body: JSON.stringify({ audioFileName: fileName })
-                });
-
-                if (!response.ok) {
-                    console.error(`[API ERROR] Backend responded with status: ${response.status}`);
-                    break; // If it responded but with an error status (e.g. 500), no point retrying connection
-                } else {
-                    console.log("[API] backend triggered");
-                    success = true;
-                }
-            } catch (err) {
-                attempts++;
-                console.error(`[API ERROR] Backend unavailable. Retrying in 2 seconds... (Attempt ${attempts}/3)`);
-                await new Promise(r => setTimeout(r, 2000));
-            }
-        }
-
-        if (!success) {
-            console.error("[API ERROR] Failed to trigger backend after retries.");
-        }
+        console.log("[AUDIO MAIN] Upload successful. S3 Trigger will automatically start the transcription process.");
     }
 
     isProcessingAudio = false;
@@ -340,8 +466,8 @@ ipcMain.handle('toggle-floating-mode', () => {
 
 ipcMain.handle('send-transcript', async (event, data) => {
     try {
-        // Placeholder AWS API Gateway endpoint
-        const endpoint = 'https://placeholder.execute-api.us-east-1.amazonaws.com/dev/process';
+        // Use the API URL from .env — never hardcode endpoints
+        const endpoint = process.env.VITE_API_URL;
 
         // In a real scenario, this Axios request happens here:
         // const response = await axios.post(endpoint, { transcript: data });
