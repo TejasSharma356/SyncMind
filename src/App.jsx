@@ -430,7 +430,7 @@ function App() {
   if (showInfo) {
     return <ProjectInfoPage
       onBack={() => { setShowInfo(false); setShowLanding(true); }}
-      onGetSoftware={() => { setShowInfo(false); setShowAbout(true); }}
+      onGetSoftware={handleDownloadSoftware}
       onLaunch={() => { setLaunchSource('info'); setShowInfo(false); setShowLanding(false); }}
     />;
   }
@@ -445,7 +445,7 @@ function App() {
   if (showFeatures) {
     return <FeaturesPage
       onBack={() => { setShowFeatures(false); setShowLanding(true); }}
-      onGetSoftware={() => { setShowFeatures(false); setShowAbout(true); }}
+      onGetSoftware={handleDownloadSoftware}
       onLaunch={() => { setLaunchSource('features'); setShowFeatures(false); setShowLanding(false); }}
     />;
   }
@@ -464,6 +464,15 @@ function App() {
     />;
   }
 
+  const handleDownloadSoftware = () => {
+    const link = document.createElement('a');
+    link.href = '/SyncMind_Setup.exe';
+    link.setAttribute('download', 'SyncMind_Setup.exe');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   if (showLanding || (!user && !loading)) {
     return <LandingPage
       onLaunch={() => {
@@ -475,7 +484,7 @@ function App() {
         }
       }}
       onAbout={() => setShowInfo(true)}
-      onGetSoftware={() => setShowAbout(true)}
+      onGetSoftware={handleDownloadSoftware}
       onFeatures={() => setShowFeatures(true)}
       onWatchDemo={() => setShowDemo(true)}
       onPricing={() => setShowPricing(true)}
@@ -538,7 +547,7 @@ function App() {
         onGetSoftware={() => {
           localStorage.setItem('syncmind_first_meet_popup_closed', 'true');
           setShowFirstMeetPopup(false);
-          setShowAbout(true); // Route back to Get Software (About) page!
+          handleDownloadSoftware();
         }}
       />
     </div>
