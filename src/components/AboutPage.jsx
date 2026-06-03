@@ -64,6 +64,8 @@ const AboutPage = ({ onBack, onLaunch }) => {
                     {/* Download Button */}
                     <a
                         href={DOWNLOAD_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="inline-flex items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white font-bold px-10 py-5 rounded-2xl text-xl shadow-2xl shadow-blue-500/30 hover:scale-105 active:scale-95 transition-all duration-200 group mb-3"
                     >
                         <Download size={24} className="group-hover:animate-bounce" />
