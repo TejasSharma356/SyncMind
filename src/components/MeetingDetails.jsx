@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 
 import TranscriptChat from './TranscriptChat';
+import { useAuth } from '../contexts/AuthContext';
 
 const MeetingDetails = ({ meeting, standalone = false, onBack, onDelete, onUpdate }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -134,9 +135,54 @@ const MeetingDetails = ({ meeting, standalone = false, onBack, onDelete, onUpdat
         }
         setUpdatingTaskIndex(null);
     };
+    if (isLoading) {
+        return (
+            <div className="flex-1 h-full bg-transparent flex flex-col p-10 overflow-y-auto gap-8 select-none">
+                {/* Header Skeleton */}
+                <div className="flex flex-col gap-3 border-b border-gray-100 dark:border-gray-800 pb-6">
+                    <div className="h-9 animate-shimmer rounded-md w-1/2"></div>
+                    <div className="h-4 animate-shimmer rounded-md w-48"></div>
+                </div>
+
+                {/* Grid Skeleton */}
+                <div className="grid lg:grid-cols-2 gap-8 flex-1">
+                    
+                    {/* Summary Skeleton */}
+                    <div className="bg-white/40 dark:bg-gray-900/30 rounded-2xl p-8 border border-gray-100/50 dark:border-gray-800/50 flex flex-col gap-4">
+                        <div className="h-5 animate-shimmer rounded-md w-32 mb-2"></div>
+                        <div className="h-4 animate-shimmer rounded-md w-full"></div>
+                        <div className="h-4 animate-shimmer rounded-md w-11/12"></div>
+                        <div className="h-4 animate-shimmer rounded-md w-5/6"></div>
+                        <div className="h-4 animate-shimmer rounded-md w-2/3"></div>
+                    </div>
+
+                    {/* Key Insights Skeleton */}
+                    <div className="bg-white/40 dark:bg-gray-900/30 rounded-2xl p-8 border border-gray-100/50 dark:border-gray-800/50 flex flex-col gap-4">
+                        <div className="h-5 animate-shimmer rounded-md w-36 mb-2"></div>
+                        <div className="h-4 animate-shimmer rounded-md w-full"></div>
+                        <div className="h-4 animate-shimmer rounded-md w-11/12"></div>
+                        <div className="h-4 animate-shimmer rounded-md w-3/4"></div>
+                    </div>
+
+                    {/* Action Items Skeleton */}
+                    <div className="bg-white/40 dark:bg-gray-900/30 rounded-2xl p-8 border border-gray-100/50 dark:border-gray-800/50 flex flex-col gap-4 lg:col-span-2">
+                        <div className="h-5 animate-shimmer rounded-md w-40 mb-2"></div>
+                        {Array.from({ length: 3 }).map((_, idx) => (
+                            <div key={idx} className="flex items-center gap-3">
+                                <div className="w-5 h-5 animate-shimmer rounded-md shrink-0"></div>
+                                <div className="h-4 animate-shimmer rounded-md w-1/3"></div>
+                            </div>
+                        ))}
+                    </div>
+
+                </div>
+            </div>
+        );
+    }
+
     if (!meeting) {
         return (
-            <div className="flex-1 flex items-center justify-center bg-gray-50 h-full">
+            <div className="flex-1 flex items-center justify-center bg-transparent h-full">
                 <p className="text-gray-400">Select a meeting to view details</p>
             </div>
         );
@@ -216,7 +262,7 @@ const MeetingDetails = ({ meeting, standalone = false, onBack, onDelete, onUpdat
             </div>
 
             {/* Content */}
-            <div className={`flex-1 overflow-y-auto p-8 space-y-10 print:overflow-visible print:h-auto print:p-0 print:space-y-6 ${standalone ? 'w-full [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden' : ''}`}>
+            <div className="flex-1 overflow-y-auto p-8 space-y-10 print:overflow-visible print:h-auto print:p-0 print:space-y-6 w-full">
                 {/* Notes (If any) */}
                 {meeting.notes && (
                     <section>

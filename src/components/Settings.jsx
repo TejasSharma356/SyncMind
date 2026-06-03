@@ -1,8 +1,14 @@
 import React, { useState } from 'react';
 import { Settings as SettingsIcon, Bell, Shield, Smartphone, MonitorSmartphone, User, CreditCard, Link2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
-const Settings = ({ darkMode, toggleTheme }) => {
+const Settings = ({ darkMode, toggleTheme, setCurrentView, onLogout }) => {
+    const { user } = useAuth();
     const [desktopConnected, setDesktopConnected] = useState(true);
+    
+    const userName = user?.displayName || (user?.email ? user.email.split('@')[0] : 'Demo User');
+    const userEmail = user?.email || 'demo@syncmind.app';
+    const userPhoto = user?.photoURL || null;
 
     return (
         <div className="flex-1 w-full h-full overflow-y-auto bg-transparent transition-colors duration-200">
@@ -126,16 +132,31 @@ const Settings = ({ darkMode, toggleTheme }) => {
                             <h2 className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-white mb-6">Account</h2>
 
                             <div className="flex items-center gap-5 mb-8">
-                                <div className="w-16 h-16 bg-gray-200 dark:bg-gray-800 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400">
-                                    <User size={32} />
-                                </div>
+                                {userPhoto ? (
+                                    <img src={userPhoto} alt={userName} className="w-16 h-16 rounded-full object-cover border-2 border-blue-500/30 shadow-md" referrerPolicy="no-referrer" />
+                                ) : (
+                                    <div className="w-16 h-16 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-xl uppercase shadow-md">
+                                        {userName.charAt(0)}
+                                    </div>
+                                )}
                                 <div>
-                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Sarah Jenkins</h3>
-                                    <p className="text-base text-gray-500 dark:text-gray-400">sarah@example.com</p>
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{userName}</h3>
+                                    <p className="text-base text-gray-500 dark:text-gray-400">{userEmail}</p>
                                 </div>
-                                <button className="ml-auto px-5 py-3 border border-gray-200 dark:border-gray-700 rounded-xl text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
-                                    Edit Profile
-                                </button>
+                                <div className="ml-auto flex flex-wrap items-center gap-3">
+                                    <button 
+                                        onClick={() => setCurrentView && setCurrentView('profile')}
+                                        className="px-5 py-3 border border-gray-200 dark:border-gray-700 hover:border-blue-500/50 rounded-xl text-base font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all active:scale-95"
+                                    >
+                                        Edit Profile
+                                    </button>
+                                    <button 
+                                        onClick={onLogout}
+                                        className="px-5 py-3 bg-red-500/10 hover:bg-red-600 border border-red-500/20 hover:border-red-600 text-red-600 dark:text-red-400 hover:text-white rounded-xl text-base font-semibold transition-all active:scale-95 shadow-sm"
+                                    >
+                                        Sign Out
+                                    </button>
+                                </div>
                             </div>
 
                             <div className="border-t border-gray-100 dark:border-gray-800 pt-6 mt-6">

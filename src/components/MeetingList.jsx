@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Search } from 'lucide-react';
 
-const MeetingList = ({ meetings, selectedId, onSelect }) => {
+const MeetingList = ({ meetings, selectedId, onSelect, isLoading }) => {
     const [searchTerm, setSearchTerm] = useState('');
 
     const filteredMeetings = meetings.filter(meeting => {
@@ -27,7 +27,17 @@ const MeetingList = ({ meetings, selectedId, onSelect }) => {
             </div>
 
             <div className="flex-1 overflow-y-auto">
-                {filteredMeetings.length === 0 ? (
+                {isLoading ? (
+                    Array.from({ length: 5 }).map((_, idx) => (
+                        <div key={idx} className="p-5 border-b border-gray-100 dark:border-gray-800 flex flex-col gap-3">
+                            <div className="h-4.5 animate-shimmer rounded-md w-3/4"></div>
+                            <div className="flex items-center gap-2 mt-1">
+                                <div className="h-3.5 animate-shimmer rounded-md w-16"></div>
+                                <div className="h-3.5 animate-shimmer rounded-md w-20"></div>
+                            </div>
+                        </div>
+                    ))
+                ) : filteredMeetings.length === 0 ? (
                     <div className="p-6 text-center text-gray-500 text-sm">
                         No meetings found matching "{searchTerm}"
                     </div>

@@ -2,8 +2,38 @@ import React from 'react';
 import { Lightbulb, ArrowRight } from 'lucide-react';
 import SpotlightCard from './SpotlightCard';
 
-const Insights = ({ meetings = [], onViewDetails }) => {
+const Insights = ({ meetings = [], onViewDetails, isLoading }) => {
     const meetingsWithInsights = meetings.filter(m => m.insights && m.insights.length > 0);
+
+    if (isLoading) {
+        return (
+            <div className="flex-1 w-full h-full overflow-y-auto bg-transparent">
+                <div className="w-full max-w-5xl mx-auto px-6 py-12 flex flex-col gap-6">
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-3">
+                        <Lightbulb className="text-yellow-500" />
+                        Insights & Recommendations
+                    </h1>
+                    
+                    <div className="flex flex-col gap-6">
+                        {Array.from({ length: 3 }).map((_, idx) => (
+                            <div key={idx} className="bg-white/40 dark:bg-gray-900/30 backdrop-blur-lg p-6 rounded-xl border border-gray-100/50 dark:border-gray-800/50 flex flex-col gap-4">
+                                <div className="flex justify-between items-start">
+                                    <div className="h-5 animate-shimmer rounded-md w-1/3"></div>
+                                    <div className="h-4 animate-shimmer rounded-md w-12 shrink-0"></div>
+                                </div>
+                                <div className="space-y-3 mt-2">
+                                    <div className="h-4 animate-shimmer rounded-md w-full"></div>
+                                    <div className="h-4 animate-shimmer rounded-md w-11/12"></div>
+                                    <div className="h-4 animate-shimmer rounded-md w-4/5"></div>
+                                </div>
+                                <div className="h-4 animate-shimmer rounded-md w-28 mt-4"></div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex-1 w-full h-full overflow-y-auto bg-transparent transition-colors duration-200">

@@ -167,7 +167,12 @@ return (
         }}
         >
         Your meetings,{' '}
-        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
+        <span style={{
+            background: 'linear-gradient(90deg, #60a5fa, #c084fc)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+        }}>
             perfectly synced
         </span>{' '}
         and recalled.
@@ -221,7 +226,7 @@ return (
             onClick={onLaunch}
             className="w-fit inline-flex items-center gap-2.5 font-semibold px-8 py-4 rounded-xl text-base transition-all hover:scale-105 active:scale-95 bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-500/20 text-white"
         >
-            Open Dashboard
+            Visit Dashboard
             <ArrowRight size={18} />
         </button>
         </div>
