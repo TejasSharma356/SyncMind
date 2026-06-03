@@ -12,110 +12,61 @@ const speakerColors = [
 const TranscriptChat = ({ transcript }) => {
     if (!transcript) return null;
 
-    // Helper to clean up punctuation spacing (e.g. "word , ." -> "word,.")
+    // Clean up punctuation spacing (e.g. "word , ." -> "word,.")
     const cleanText = (str) => {
         return str
-            .replace(/\s+([,.!?;:])/g, '$1') // Remove space before punctuation
-            .replace(/\s+/g, ' ')           // Collapse multiple spaces
+            .replace(/\s+([,.!?;:])/g, '$1')
+            .replace(/\s+/g, ' ')
             .trim();
-    }
-
-    // Capture Speaker tags (e.g. "Speaker 1:")
-    // We use a regex that splits while keeping the tags
-    const speakerRegex = /(Speaker\s+\d+:)/gi;
-    const rawParts = transcript.split(speakerRegex);
-
-    const grouped = [];
-    let currentBlock = null;
-
-    // Helper to check if text ends with terminal punctuation
-    const isTerminal = (text) => {
-        const trimmed = text.trim();
-        return trimmed && /[.?!]$/.test(trimmed);
     };
 
-    // Words that are likely to start a new speaker's sentence if trapped at the end of the previous speaker.
-    const sentenceStarters = new Set(['all', 'if', 'and', 'but', 'so', 'then', 'right', 'ok', 'okay', 'great', 'well', 'anyway', 'now', 'or', 'because', 'uh', 'um']);
+    // Split transcript by double newlines to get distinct blocks
+    const rawBlocks = transcript.split(/\n\n+/);
+    const grouped = [];
 
-    for (let i = 0; i < rawParts.length; i++) {
-        const part = rawParts[i].trim();
-        if (!part) continue;
+    for (let i = 0; i < rawBlocks.length; i++) {
+        const blockText = rawBlocks[i].trim();
+        if (!blockText) continue;
 
-        if (part.match(speakerRegex)) {
-            const speaker = part.replace(':', '').trim();
-            let text = (rawParts[i + 1] || '').trim();
-            i++;
-
-            let didStitchForward = false;
-
-            // --- STEP 1: FORWARD-STITCHING (Pull misplaced starters from previous block) ---
-            if (currentBlock && !isTerminal(currentBlock.text)) {
-                const words = currentBlock.text.trim().split(/\s+/);
-                const lastWord = words[words.length - 1];
-                const lastWordLower = lastWord?.toLowerCase().replace(/[^a-z]/g, '');
-
-                // If it's a known starter OR it's capitalized (and not the only word), move it forward.
-                if (lastWord && (sentenceStarters.has(lastWordLower) || (lastWord[0] === lastWord[0].toUpperCase() && words.length > 1))) {
-                    words.pop();
-                    currentBlock.text = cleanText(words.join(' '));
-                    text = lastWord + ' ' + text;
-                    didStitchForward = true;
-                }
+        // Try to match "Name: Text" (matches everything before the first colon as the speaker)
+        const match = blockText.match(/^([^:]+):\s*([\s\S]*)$/);
+        
+        if (match) {
+            let speaker = match[1].trim();
+            if (speaker.toUpperCase() === 'OMITTED' || speaker.toUpperCase() === 'UNKNOWN') {
+                speaker = 'UNKNOWN SPEAKER';
             }
+            const text = cleanText(match[2]);
 
-            // --- STEP 2: BACK-STITCHING (Push fragments/acronyms back to previous block) ---
-            const textTrimmed = text.trim();
-            const prevTextTrimmed = currentBlock ? currentBlock.text.trim() : '';
-            const startsWithLowercase = /^[a-z]/.test(textTrimmed);
-            const prevMissingPunctuation = prevTextTrimmed && !isTerminal(prevTextTrimmed);
-
-            // Important: If we just pulled a word forward, we skip pushing it back unless it's strictly lowercase.
-            if (currentBlock && textTrimmed && ((startsWithLowercase && currentBlock.speaker === speaker) || (prevMissingPunctuation && !didStitchForward))) {
-                const breakMatch = textTrimmed.match(/([.?!]\s+)/);
-                if (breakMatch) {
-                    const breakIndex = breakMatch.index + breakMatch[0].length;
-                    const fragment = textTrimmed.substring(0, breakIndex);
-                    currentBlock.text += ' ' + cleanText(fragment);
-                    text = textTrimmed.substring(breakIndex);
-                } else if (startsWithLowercase) {
-                    currentBlock.text += ' ' + cleanText(textTrimmed);
-                    text = '';
-                } else if (prevMissingPunctuation && !didStitchForward) {
-                    // Only push back short acronyms/metadata that logically belong to what the previous speaker was saying.
-                    const words = textTrimmed.split(/\s+/);
-                    const firstWord = words[0];
-                    if (firstWord && (firstWord.length <= 3 || firstWord === firstWord.toUpperCase()) && !sentenceStarters.has(firstWord.toLowerCase())) {
-                        currentBlock.text += ' ' + cleanText(firstWord);
-                        text = words.slice(1).join(' ');
-                    }
-                }
-            }
-
-            if (text.trim()) {
-                if (currentBlock && currentBlock.speaker === speaker) {
-                    currentBlock.text += ' ' + cleanText(text);
-                } else {
-                    if (currentBlock) {
-                        currentBlock.text = cleanText(currentBlock.text);
-                        grouped.push(currentBlock);
-                    }
-                    currentBlock = { type: 'speaker', speaker, text };
-                }
+            // Consecutive blocks from the same speaker get merged
+            const last = grouped[grouped.length - 1];
+            if (last && last.speaker === speaker) {
+                last.text += ' ' + text;
+            } else {
+                grouped.push({ type: 'speaker', speaker, text });
             }
         } else {
-            // It's either leading fallback text or text that got split weirdly
-            if (currentBlock) {
-                currentBlock.text += ' ' + part;
-            } else {
-                grouped.push({ type: 'fallback', text: cleanText(part) });
+            // No speaker label, fallback
+            const text = cleanText(blockText);
+            if (text) {
+                grouped.push({ type: 'fallback', text });
             }
         }
     }
 
-    if (currentBlock) {
-        currentBlock.text = cleanText(currentBlock.text);
-        grouped.push(currentBlock);
-    }
+    // Dynamic color mapping for arbitrary speaker names
+    let nextColorIndex = 0;
+    const speakerColorMap = {};
+
+    const getSpeakerColorClass = (speakerName) => {
+        // Normalize "Speaker 1", "speaker 1" etc to same color
+        const normalized = speakerName.toLowerCase();
+        if (!speakerColorMap[normalized]) {
+            speakerColorMap[normalized] = speakerColors[nextColorIndex % speakerColors.length];
+            nextColorIndex++;
+        }
+        return speakerColorMap[normalized];
+    };
 
     return (
         <div className="flex flex-col items-start gap-6 mt-4">
@@ -128,10 +79,7 @@ const TranscriptChat = ({ transcript }) => {
                     );
                 }
 
-                // Extract a number from "Speaker 1" to assign consistent colors
-                const match = block.speaker.match(/\d+/);
-                const speakerNum = match ? parseInt(match[0], 10) : 1;
-                const colorClass = speakerColors[(speakerNum - 1) % speakerColors.length];
+                const colorClass = getSpeakerColorClass(block.speaker);
 
                 return (
                     <div key={i} className="flex flex-col gap-3 bg-gray-100 dark:bg-gray-800/60 p-6 rounded-3xl text-lg w-full max-w-4xl shadow-sm border border-gray-100 dark:border-gray-800/50">

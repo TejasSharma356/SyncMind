@@ -1,20 +1,74 @@
-import React, { useState, useEffect, useRef } from "react";
-import {
-  Calendar,
-  Users,
-  Share,
-  MoreVertical,
-  Lightbulb,
-  Check,
-  ArrowLeft,
-  Edit3,
-  Trash2,
-  Copy,
-  Download,
-  ExternalLink,
-  CheckCircle2,
-  FileText,
-} from "lucide-react";
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+    Calendar, 
+    Users, 
+    Share, 
+    MoreVertical, 
+    Lightbulb, 
+    Check, 
+    ArrowLeft,
+    Edit3,
+    Trash2,
+    Copy,
+    Download,
+    ExternalLink,
+    CheckCircle2,
+    FileText 
+} from 'lucide-react';
+
+import TranscriptChat from './TranscriptChat';
+import { useAuth } from '../contexts/AuthContext';
+
+const MeetingDetails = ({ meeting, standalone = false, onBack, onDelete, onUpdate, isLoading }) => {
+    const { user } = useAuth();
+    const [completedTasks, setCompletedTasks] = useState(new Set());
+
+    // Initialize completed action items checklist state when meeting changes
+    useEffect(() => {
+        if (meeting && meeting.action_items) {
+            const completed = new Set();
+            meeting.action_items.forEach((item, index) => {
+                if (item.completed) {
+                    completed.add(index);
+                }
+            });
+            setCompletedTasks(completed);
+        } else {
+            setCompletedTasks(new Set());
+        }
+    }, [meeting]);
+
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [editTitle, setEditTitle] = useState('');
+    const [editSummary, setEditSummary] = useState('');
+    const [editNotes, setEditNotes] = useState('');
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [toastMessage, setToastMessage] = useState(null);
+    const menuRef = useRef(null);
+
+    // Close menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (menuRef.current && !menuRef.current.contains(event.target)) {
+                setIsMenuOpen(false);
+            }
+        };
+
+        if (isMenuOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isMenuOpen]);
+
+    const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+
+    const showToast = (message) => {
+        setToastMessage(message);
+        setTimeout(() => setToastMessage(null), 3000);
+    };
 
 import TranscriptChat from "./TranscriptChat";
 import { getActionItems } from "../utils/analyticsHelpers";
@@ -70,25 +124,118 @@ const MeetingDetails = ({
     setIsEditModalOpen(true);
   };
 
-  const handleSaveEdit = async () => {
-    if (editTitle.trim() !== "" && !isSaving) {
-      setIsSaving(true);
-      const updatedMeeting = {
-        ...meeting,
-        title: editTitle.trim(),
-        summary: editSummary.trim(),
-        notes: editNotes.trim(),
-      };
+    const toggleTask = async (index) => {
+        if (!meeting || !meeting.action_items) return;
 
-      if (onUpdate) {
-        const result = await onUpdate(updatedMeeting);
-        showToast(result?.message || "Meeting info updated!");
-      } else {
-        showToast("Meeting info updated locally.");
-      }
+        const nextCompleted = !completedTasks.has(index);
+        
+        // Update local state instantly for optimal responsiveness
+        setCompletedTasks(prev => {
+            const next = new Set(prev);
+            if (next.has(index)) {
+                next.delete(index);
+            } else {
+                next.add(index);
+            }
+            return next;
+        });
 
-      setIsSaving(false);
-      setIsEditModalOpen(false);
+        // Compute new action items list
+        const updatedActionItems = meeting.action_items.map((item, idx) => {
+            if (idx === index) {
+                return { ...item, completed: nextCompleted };
+            }
+            return item;
+        });
+
+        // Update local React tree
+        const updatedMeeting = {
+            ...meeting,
+            action_items: updatedActionItems
+        };
+        if (onUpdate) {
+            onUpdate(updatedMeeting);
+        }
+
+        // Persist to AWS DynamoDB
+        const API_URL = import.meta.env.VITE_API_URL;
+        if (API_URL && meeting.meetingId && !meeting.meetingId.startsWith('m')) {
+            try {
+                let headers = {
+                    'Content-Type': 'application/json'
+                };
+                if (user) {
+                    const token = await user.getIdToken();
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+                const response = await fetch(`${API_URL}?action=updateActionItems`, {
+                    method: 'PATCH',
+                    headers,
+                    body: JSON.stringify({
+                        meetingId: meeting.meetingId,
+                        action_items: updatedActionItems
+                    })
+                });
+                if (!response.ok) {
+                    throw new Error("AWS Server responded with status: " + response.status);
+                }
+                console.log("Action item status synchronized with cloud!");
+            } catch (err) {
+                console.error("Failed to sync action item completed status with AWS cloud:", err);
+            }
+        }
+    };
+    if (isLoading) {
+        return (
+            <div className="flex-1 h-full bg-transparent flex flex-col p-10 overflow-y-auto gap-8 select-none">
+                {/* Header Skeleton */}
+                <div className="flex flex-col gap-3 border-b border-gray-100 dark:border-gray-800 pb-6">
+                    <div className="h-9 animate-shimmer rounded-md w-1/2"></div>
+                    <div className="h-4 animate-shimmer rounded-md w-48"></div>
+                </div>
+
+                {/* Grid Skeleton */}
+                <div className="grid lg:grid-cols-2 gap-8 flex-1">
+                    
+                    {/* Summary Skeleton */}
+                    <div className="bg-white/40 dark:bg-gray-900/30 rounded-2xl p-8 border border-gray-100/50 dark:border-gray-800/50 flex flex-col gap-4">
+                        <div className="h-5 animate-shimmer rounded-md w-32 mb-2"></div>
+                        <div className="h-4 animate-shimmer rounded-md w-full"></div>
+                        <div className="h-4 animate-shimmer rounded-md w-11/12"></div>
+                        <div className="h-4 animate-shimmer rounded-md w-5/6"></div>
+                        <div className="h-4 animate-shimmer rounded-md w-2/3"></div>
+                    </div>
+
+                    {/* Key Insights Skeleton */}
+                    <div className="bg-white/40 dark:bg-gray-900/30 rounded-2xl p-8 border border-gray-100/50 dark:border-gray-800/50 flex flex-col gap-4">
+                        <div className="h-5 animate-shimmer rounded-md w-36 mb-2"></div>
+                        <div className="h-4 animate-shimmer rounded-md w-full"></div>
+                        <div className="h-4 animate-shimmer rounded-md w-11/12"></div>
+                        <div className="h-4 animate-shimmer rounded-md w-3/4"></div>
+                    </div>
+
+                    {/* Action Items Skeleton */}
+                    <div className="bg-white/40 dark:bg-gray-900/30 rounded-2xl p-8 border border-gray-100/50 dark:border-gray-800/50 flex flex-col gap-4 lg:col-span-2">
+                        <div className="h-5 animate-shimmer rounded-md w-40 mb-2"></div>
+                        {Array.from({ length: 3 }).map((_, idx) => (
+                            <div key={idx} className="flex items-center gap-3">
+                                <div className="w-5 h-5 animate-shimmer rounded-md shrink-0"></div>
+                                <div className="h-4 animate-shimmer rounded-md w-1/3"></div>
+                            </div>
+                        ))}
+                    </div>
+
+                </div>
+            </div>
+        );
+    }
+
+    if (!meeting) {
+        return (
+            <div className="flex-1 flex items-center justify-center bg-transparent h-full">
+                <p className="text-gray-400">Select a meeting to view details</p>
+            </div>
+        );
     }
   };
 
@@ -209,67 +356,111 @@ const MeetingDetails = ({
               <MoreVertical size={18} />
             </button>
 
-            {/* Dropdown Menu */}
-            {isMenuOpen && (
-              <div className="absolute right-0 mt-2 w-56 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border border-gray-100 dark:border-gray-800 rounded-xl shadow-xl z-50 py-2 overflow-hidden animate-in fade-in zoom-in duration-200 origin-top-right">
-                <button
-                  onClick={handleEditClick}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
-                >
-                  <Edit3 size={16} className="text-gray-400" />
-                  <span>Manage Meeting Info</span>
-                </button>
-                <button
-                  onClick={handleCopyLink}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
-                >
-                  <Copy size={16} className="text-gray-400" />
-                  <span>Copy Meeting Link</span>
-                </button>
-                <div className="h-px bg-gray-100 dark:bg-gray-800 my-1"></div>
-                <button
-                  onClick={handleExportPDF}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
-                >
-                  <Download size={16} className="text-gray-400" />
-                  <span>Export as PDF</span>
-                </button>
-                <button
-                  onClick={handleViewOriginal}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
-                >
-                  <ExternalLink size={16} className="text-gray-400" />
-                  <span>View Original File</span>
-                </button>
-                <div className="h-px bg-gray-100 dark:bg-gray-800 my-1"></div>
-                <button
-                  onClick={handleDeleteClick}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors font-medium"
-                >
-                  <Trash2 size={16} />
-                  <span>Delete Meeting</span>
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-8 space-y-10 print:overflow-visible print:h-auto print:p-0 print:space-y-6 w-full">
+                {/* Notes (If any) */}
+                {meeting.notes && (
+                    <section>
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                            <FileText size={20} className="text-blue-500" />
+                            Meeting Notes
+                        </h2>
+                        <div className="bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-900/50 p-6 rounded-2xl shadow-sm">
+                            <p className="text-gray-800 dark:text-gray-200 whitespace-pre-wrap">{meeting.notes}</p>
+                        </div>
+                    </section>
+                )}
 
-      {/* Content */}
-      <div
-        className={`flex-1 overflow-y-auto p-8 space-y-10 print:overflow-visible print:h-auto print:p-0 print:space-y-6 ${standalone ? "w-full [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" : ""}`}
-      >
-        {/* Notes (If any) */}
-        {meeting.notes && (
-          <section>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-              <FileText size={20} className="text-blue-500" />
-              Meeting Notes
-            </h2>
-            <div className="bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-900/50 p-6 rounded-2xl shadow-sm">
-              <p className="text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
-                {meeting.notes}
-              </p>
+                {/* Transcript */}
+                {meeting.transcript && (
+                    <section>
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                            Transcript
+                        </h2>
+                        <TranscriptChat transcript={meeting.transcript} />
+                    </section>
+                )}
+
+                {/* Key Points */}
+                {meeting.key_points && meeting.key_points.length > 0 && (
+                    <section>
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                            Key Points
+                        </h2>
+                        <ul className="space-y-4">
+                            {meeting.key_points.map((point, index) => (
+                                <li key={index} className="flex gap-4 text-base lg:text-lg text-gray-700 dark:text-gray-300">
+                                    <span className="text-blue-500 mt-1">•</span>
+                                    <span>{point}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </section>
+                )}
+
+                {/* Insights */}
+                {meeting.insights && meeting.insights.length > 0 && (
+                    <section>
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                            Insights
+                        </h2>
+                        <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm w-fit max-w-full">
+                            <ul className="space-y-6">
+                                {meeting.insights.map((insight, index) => (
+                                    <li key={index} className="flex gap-4 text-base lg:text-lg text-gray-700 dark:text-gray-300">
+                                        <span className="text-yellow-500 mt-1 flex-shrink-0">
+                                            <Lightbulb size={20} />
+                                        </span>
+                                        <span className="leading-relaxed">{insight.text}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    </section>
+                )}
+
+                {/* Action Items */}
+                {meeting.action_items && meeting.action_items.length > 0 && (
+                    <section>
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                            Action Items
+                        </h2>
+                        <div className="grid gap-4 w-fit max-w-full">
+                            {meeting.action_items.map((item, index) => {
+                                const isCompleted = completedTasks.has(index);
+                                return (
+                                    <button
+                                        key={index}
+                                        onClick={() => toggleTask(index)}
+                                        className={`w-fit max-w-full text-left p-6 rounded-2xl border transition-all flex flex-col sm:flex-row gap-8 sm:justify-between sm:items-center group
+                                            ${isCompleted
+                                                ? 'border-green-200 bg-green-50 dark:border-green-900/50 dark:bg-green-900/10'
+                                                : 'border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900/50 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-sm'
+                                            }`}
+                                    >
+                                        <div className="flex items-start sm:items-center gap-4">
+                                            <div className={`w-6 h-6 rounded flex items-center justify-center border flex-shrink-0 transition-colors mt-0.5 sm:mt-0
+                                                ${isCompleted
+                                                    ? 'bg-green-500 border-green-500 text-white'
+                                                    : 'border-gray-300 dark:border-gray-600 group-hover:border-blue-500 text-transparent'
+                                                }`}>
+                                                <Check size={16} strokeWidth={3} />
+                                            </div>
+                                            <span className={`text-base lg:text-lg font-medium transition-colors ${isCompleted
+                                                ? 'text-gray-400 dark:text-gray-500 line-through'
+                                                : 'text-gray-900 dark:text-gray-100'
+                                                }`}>{item.task}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 pl-10 sm:pl-0">
+                                            <Users size={18} className={isCompleted ? 'text-gray-400' : 'text-blue-500'} />
+                                            <span className={`text-sm font-medium ${isCompleted ? 'text-gray-400' : 'text-gray-600 dark:text-gray-300'}`}>{item.owner}</span>
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </section>
+                )}
             </div>
           </section>
         )}

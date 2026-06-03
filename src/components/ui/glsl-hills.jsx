@@ -1,26 +1,21 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 
-const GLSLHills = ({ width = '100vw', height = '100vh', cameraZ = 125, planeSize = 256, speed = 0.5 }) => {
-    const canvasRef = useRef(null);
-    const containerRef = useRef(null);
+class Plane {
+    constructor(speed, planeSize) {
+        this.uniforms = {
+            time: { type: 'f', value: 0 },
+        };
+        this.mesh = this.createMesh(planeSize);
+        this.time = speed;
+    }
 
-    useEffect(() => {
-        class Plane {
-            constructor() {
-                this.uniforms = {
-                    time: { type: 'f', value: 0 },
-                };
-                this.mesh = this.createMesh();
-                this.time = speed;
-            }
-
-            createMesh() {
-                return new THREE.Mesh(
-                    new THREE.PlaneGeometry(planeSize, planeSize, planeSize, planeSize),
-                    new THREE.RawShaderMaterial({
-                        uniforms: this.uniforms,
-                        vertexShader: `
+    createMesh(planeSize) {
+        return new THREE.Mesh(
+            new THREE.PlaneGeometry(planeSize, planeSize, planeSize, planeSize),
+            new THREE.RawShaderMaterial({
+                uniforms: this.uniforms,
+                vertexShader: `
               #define GLSLIFY 1
               attribute vec3 position;
               uniform mat4 projectionMatrix;
@@ -97,7 +92,7 @@ const GLSLHills = ({ width = '100vw', height = '100vh', cameraZ = 125, planeSize
                 gl_Position = projectionMatrix * modelViewMatrix * vec4(lastPosition, 1.0);
               }
             `,
-                        fragmentShader: `
+                fragmentShader: `
               precision highp float;
               #define GLSLIFY 1
               varying vec3 vPosition;
@@ -107,21 +102,26 @@ const GLSLHills = ({ width = '100vw', height = '100vh', cameraZ = 125, planeSize
                 gl_FragColor = vec4(color, opacity);
               }
             `,
-                        transparent: true
-                    })
-                );
-            }
+                transparent: true
+            })
+        );
+    }
 
-            render(time) {
-                this.uniforms.time.value += time * this.time;
-            }
-        }
+    render(time) {
+        this.uniforms.time.value += time * this.time;
+    }
+}
 
+const GLSLHills = ({ width = '100vw', height = '100vh', cameraZ = 125, planeSize = 256, speed = 0.5 }) => {
+    const canvasRef = useRef(null);
+    const containerRef = useRef(null);
+
+    useEffect(() => {
         const renderer = new THREE.WebGLRenderer({ canvas: canvasRef.current, antialias: false });
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 10000);
         const clock = new THREE.Clock();
-        const plane = new Plane();
+        const plane = new Plane(speed, planeSize);
 
         let animFrameId;
 

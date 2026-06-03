@@ -7,7 +7,6 @@ const Sidebar = ({ activeView, onNavigate, onNavigateBack, onNavigateHome }) => 
         { id: 'insights', icon: Lightbulb, label: 'Insights' },
         { id: 'analytics', icon: BarChart3, label: 'Analytics' },
         { id: 'settings', icon: Settings, label: 'Settings' },
-        { id: 'profile', icon: User, label: 'Profile' },
     ];
 
     return (

@@ -7,97 +7,219 @@ import AnalyticsPage from './components/AnalyticsPage';
 import Settings from './components/Settings';
 import Profile from './components/Profile';
 import LandingPage from './components/LandingPage';
+import LoginPage from './components/LoginPage';
 import AboutPage from './components/AboutPage';
 import ProjectInfoPage from './components/ProjectInfoPage';
 import FeaturesPage from './components/FeaturesPage';
 import DemoPage from './components/DemoPage';
 import PricingPage from './components/PricingPage';
 import Aurora from './components/Aurora';
+import ErrorBoundary from './components/ErrorBoundary';
+import DashboardSkeleton from './components/DashboardSkeleton';
+import RecordFirstMeetingPopup from './components/RecordFirstMeetingPopup';
 import { mockMeetings } from './data/mockMeetings';
-import { CheckCircle2 } from 'lucide-react';
+import { logout, isFirebaseInitialized, getFirebaseError } from './firebase';
+import { useAuth } from './contexts/AuthContext';
 
 const API_URL = import.meta.env.VITE_API_URL;
-const LOCAL_CHANGES_KEY = 'syncmind:meeting-changes';
-const LOCAL_DELETES_KEY = 'syncmind:deleted-meetings';
-
-const sortMeetings = (items = []) => (
-  [...items].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-);
-
-const readLocalJson = (key, fallback) => {
-  try {
-    const stored = window.localStorage.getItem(key);
-    return stored ? JSON.parse(stored) : fallback;
-  } catch (error) {
-    console.warn(`Unable to read ${key} from localStorage.`, error);
-    return fallback;
-  }
-};
-
-const writeLocalJson = (key, value) => {
-  try {
-    window.localStorage.setItem(key, JSON.stringify(value));
-  } catch (error) {
-    console.warn(`Unable to write ${key} to localStorage.`, error);
-  }
-};
-
-const getLocalMeetingChanges = () => readLocalJson(LOCAL_CHANGES_KEY, {});
-const getLocalDeletedMeetingIds = () => new Set(readLocalJson(LOCAL_DELETES_KEY, []));
-
-const persistLocalMeetingChange = (meeting) => {
-  const changes = getLocalMeetingChanges();
-  changes[meeting.meetingId] = meeting;
-  writeLocalJson(LOCAL_CHANGES_KEY, changes);
-};
-
-const persistLocalMeetingDelete = (meetingId) => {
-  const deletedIds = getLocalDeletedMeetingIds();
-  deletedIds.add(meetingId);
-  writeLocalJson(LOCAL_DELETES_KEY, [...deletedIds]);
-
-  const changes = getLocalMeetingChanges();
-  delete changes[meetingId];
-  writeLocalJson(LOCAL_CHANGES_KEY, changes);
-};
-
-const applyLocalMeetingState = (items = []) => {
-  const changes = getLocalMeetingChanges();
-  const deletedIds = getLocalDeletedMeetingIds();
-
-  return sortMeetings(
-    items
-      .filter((meeting) => !deletedIds.has(meeting.meetingId))
-      .map((meeting) => changes[meeting.meetingId] || meeting)
-  );
-};
-
-const getMeetingApiUrl = (meetingId) => {
-  if (!API_URL) return null;
-  return `${API_URL.replace(/\/$/, '')}/${encodeURIComponent(meetingId)}`;
-};
-
-const selectExistingMeetingId = (currentId, items = []) => {
-  if (currentId && items.some(meeting => meeting.meetingId === currentId)) {
-    return currentId;
-  }
-  return items[0]?.meetingId || null;
-};
+const FIREBASE_ERROR = getFirebaseError();
 
 function App() {
-  const [showLanding, setShowLanding] = useState(true);
-  const [showAbout, setShowAbout] = useState(false);
-  const [showInfo, setShowInfo] = useState(false);
-  const [showFeatures, setShowFeatures] = useState(false);
-  const [showDemo, setShowDemo] = useState(false);
-  const [showPricing, setShowPricing] = useState(false);
-  const [launchSource, setLaunchSource] = useState('landing'); // Track where we launched from
-  const [currentView, setCurrentView] = useState('meetings');
-  const [previousView, setPreviousView] = useState(null);
+  const { user, loading } = useAuth();
+  
+
+
+  // Clear persistent dashboard routing states when logged out to avoid carrying over view state
+  useEffect(() => {
+    if (!user && !loading) {
+      sessionStorage.removeItem('syncmind_current_view');
+      sessionStorage.removeItem('syncmind_selected_meeting_id');
+      sessionStorage.removeItem('syncmind_previous_view');
+      
+      sessionStorage.setItem('syncmind_show_landing', 'true');
+      sessionStorage.setItem('syncmind_show_login', 'false');
+      sessionStorage.setItem('syncmind_show_about', 'false');
+      sessionStorage.setItem('syncmind_show_info', 'false');
+      sessionStorage.setItem('syncmind_show_features', 'false');
+      sessionStorage.setItem('syncmind_show_demo', 'false');
+      sessionStorage.setItem('syncmind_show_pricing', 'false');
+    }
+  }, [user, loading]);
+
+
+
+  // Log Firebase status on app load
+  useEffect(() => {
+    const fbInitialized = isFirebaseInitialized();
+    if (!fbInitialized) {
+      console.warn('[App] Firebase is not initialized. Running in demo mode with mock data only.');
+    } else {
+      console.log('[App] Firebase initialized successfully');
+    }
+  }, []);
+  const [showLanding, setShowLanding] = useState(() => {
+    return sessionStorage.getItem('syncmind_show_landing') !== 'false';
+  });
+  const [showLogin, setShowLogin] = useState(() => {
+    return sessionStorage.getItem('syncmind_show_login') === 'true';
+  });
+  const [showAbout, setShowAbout] = useState(() => {
+    return sessionStorage.getItem('syncmind_show_about') === 'true';
+  });
+  const [showInfo, setShowInfo] = useState(() => {
+    return sessionStorage.getItem('syncmind_show_info') === 'true';
+  });
+  const [showFeatures, setShowFeatures] = useState(() => {
+    return sessionStorage.getItem('syncmind_show_features') === 'true';
+  });
+  const [showDemo, setShowDemo] = useState(() => {
+    return sessionStorage.getItem('syncmind_show_demo') === 'true';
+  });
+  const [showPricing, setShowPricing] = useState(() => {
+    return sessionStorage.getItem('syncmind_show_pricing') === 'true';
+  });
+  const [launchSource, setLaunchSource] = useState(() => {
+    return sessionStorage.getItem('syncmind_launch_source') || 'landing';
+  });
+
+  useEffect(() => {
+    // Check if we came from Electron app
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('source') === 'desktop') {
+      setShowLanding(false);
+      setShowLogin(true);
+    }
+  }, []);
+
+  // Heartbeat polling to capture Electron login requests in-place if website is already open
+  useEffect(() => {
+    if (!showLogin) return;
+
+    let timeoutId;
+    let currentInterval = 2000;
+    const maxInterval = 30000;
+
+    const pollElectronServer = async () => {
+      try {
+        const response = await fetch('http://127.0.0.1:5185/heartbeat');
+        if (response.ok) {
+          const data = await response.json();
+          currentInterval = 2000; // Reset to fast polling on success
+          if (data.loginRequested) {
+            console.log('[HEARTBEAT] Login requested by local Electron client!');
+            // Reset all other subviews
+            setShowLanding(false);
+            setShowAbout(false);
+            setShowInfo(false);
+            setShowFeatures(false);
+            setShowDemo(false);
+            setShowPricing(false);
+            
+            // Activate Login View
+            setShowLogin(true);
+            
+            // Inject query param source=desktop
+            const url = new URL(window.location.href);
+            url.searchParams.set('source', 'desktop');
+            window.history.replaceState({}, document.title, url.toString());
+          }
+        } else {
+          // If response not ok, treat as failure and back off
+          currentInterval = Math.min(currentInterval * 1.5, maxInterval);
+        }
+      } catch (err) {
+        // Local desktop client server offline - back off exponentially
+        currentInterval = Math.min(currentInterval * 2, maxInterval);
+      }
+
+      // Schedule next poll only if tab is visible, otherwise poll very slowly
+      const nextDelay = document.visibilityState === 'visible' ? currentInterval : maxInterval;
+      timeoutId = setTimeout(pollElectronServer, nextDelay);
+    };
+
+    // Listen for visibility change to trigger a fast check when user returns
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        clearTimeout(timeoutId);
+        currentInterval = 2000; // Reset to fast polling
+        pollElectronServer();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Start the loop
+    timeoutId = setTimeout(pollElectronServer, 1000);
+
+    return () => {
+      clearTimeout(timeoutId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [showLogin]);
+  const [currentView, setCurrentView] = useState(() => {
+    return sessionStorage.getItem('syncmind_current_view') || 'meetings';
+  });
+  const [previousView, setPreviousView] = useState(() => {
+    return sessionStorage.getItem('syncmind_previous_view') || null;
+  });
   const [meetings, setMeetings] = useState([]);
-  const [, setIsLoading] = useState(true);
-  const [selectedMeetingId, setSelectedMeetingId] = useState(null);
-  const [globalToastMessage, setGlobalToastMessage] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedMeetingId, setSelectedMeetingId] = useState(() => {
+    return sessionStorage.getItem('syncmind_selected_meeting_id') || null;
+  });
+
+  const [showFirstMeetPopup, setShowFirstMeetPopup] = useState(false);
+
+  // Check if we should prompt the first-time record popup
+  useEffect(() => {
+    if (user && !loading && meetings.length > 0) {
+      // Check if they only have the default mock walkthrough meeting (meaning 0 real meetings)
+      const hasRealMeetings = meetings.some(m => m.meetingId !== 'm1');
+      
+      if (!hasRealMeetings) {
+        const isPopupClosed = localStorage.getItem('syncmind_first_meet_popup_closed');
+        if (!isPopupClosed) {
+          setShowFirstMeetPopup(true);
+        }
+      } else {
+        // If they have real meetings, auto-close/hide it and mark as closed
+        setShowFirstMeetPopup(false);
+        localStorage.setItem('syncmind_first_meet_popup_closed', 'true');
+      }
+    }
+  }, [user, loading, meetings]);
+
+  // Persist view states in localStorage to protect them against page refreshes
+  useEffect(() => {
+    sessionStorage.setItem('syncmind_show_landing', showLanding);
+    sessionStorage.setItem('syncmind_show_login', showLogin);
+    sessionStorage.setItem('syncmind_show_about', showAbout);
+    sessionStorage.setItem('syncmind_show_info', showInfo);
+    sessionStorage.setItem('syncmind_show_features', showFeatures);
+    sessionStorage.setItem('syncmind_show_demo', showDemo);
+    sessionStorage.setItem('syncmind_show_pricing', showPricing);
+    sessionStorage.setItem('syncmind_launch_source', launchSource);
+  }, [showLanding, showLogin, showAbout, showInfo, showFeatures, showDemo, showPricing, launchSource]);
+
+  useEffect(() => {
+    sessionStorage.setItem('syncmind_current_view', currentView);
+  }, [currentView]);
+
+  useEffect(() => {
+    if (previousView) {
+      sessionStorage.setItem('syncmind_previous_view', previousView);
+    } else {
+      sessionStorage.removeItem('syncmind_previous_view');
+    }
+  }, [previousView]);
+
+  useEffect(() => {
+    if (selectedMeetingId) {
+      sessionStorage.setItem('syncmind_selected_meeting_id', selectedMeetingId);
+    } else {
+      sessionStorage.removeItem('syncmind_selected_meeting_id');
+    }
+  }, [selectedMeetingId]);
 
   // Derive the selected meeting
   const selectedMeeting = meetings.find(m => m.meetingId === selectedMeetingId) || null;
@@ -131,11 +253,22 @@ function App() {
       }
 
       try {
-        const response = await fetch(API_URL);
+        let headers = {};
+        if (user && !user.isDemo) {
+            const token = await user.getIdToken();
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const response = await fetch(API_URL, { headers });
         if (!response.ok) throw new Error('Failed to fetch');
         const data = await response.json();
 
         const sortedData = applyLocalMeetingState(data);
+
+        // Default mock walkthrough meeting for new users with 0 records
+        if (sortedData.length === 0 && mockMeetings.length > 0) {
+          sortedData.push(mockMeetings[0]);
+        }
 
         setMeetings(sortedData);
         // Automatically select the first meeting on initial load if none selected
@@ -155,7 +288,7 @@ function App() {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, []); // Remove selectedMeetingId from dep array to avoid re-selecting on every poll unless empty
+  }, [user]); // Add user to dependency array so it refetches when login state changes
 
 
   const handleDeleteMeeting = async (meetingId) => {
@@ -263,6 +396,7 @@ function App() {
       case 'insights':
         return <Insights 
           meetings={meetings} 
+          isLoading={isLoading}
           onViewDetails={(meetingId) => {
             setPreviousView('insights');
             setSelectedMeetingId(meetingId);
@@ -273,11 +407,12 @@ function App() {
         return <AnalyticsPage meetings={meetings} darkMode={darkMode} />;
       case 'meeting_detail':
         return (
-          <div className="w-full h-full print:h-auto print:block">
+          <div className="w-full h-full overflow-hidden print:h-auto print:block">
             <MeetingDetails
               key={selectedMeeting?.meetingId || 'empty'}
               meeting={selectedMeeting}
               standalone={true}
+              isLoading={isLoading}
               onBack={() => {
                 setCurrentView(previousView || 'meetings');
                 setPreviousView(null);
@@ -288,9 +423,13 @@ function App() {
           </div>
         );
       case 'settings':
-        return <Settings darkMode={darkMode} toggleTheme={toggleTheme} />;
+        return <Settings darkMode={darkMode} toggleTheme={toggleTheme} setCurrentView={setCurrentView} onLogout={logout} />;
       case 'profile':
-        return <Profile />;
+        return (
+          <Profile
+            setCurrentView={setCurrentView}
+          />
+        );
       case 'meetings':
       default:
         return (
@@ -301,14 +440,16 @@ function App() {
                 meetings={meetings}
                 selectedId={selectedMeetingId}
                 onSelect={setSelectedMeetingId}
+                isLoading={isLoading}
               />
             </div>
 
             {/* Right Panel - Meeting Details */}
-            <div className="flex-1 h-full bg-transparent relative print:h-auto print:overflow-visible">
+            <div className="flex-1 h-full overflow-hidden bg-transparent relative print:h-auto print:overflow-visible">
               <MeetingDetails
                 key={selectedMeeting?.meetingId || 'empty'}
                 meeting={selectedMeeting}
+                isLoading={isLoading}
                 onDelete={handleDeleteMeeting}
                 onUpdate={handleUpdateMeeting}
               />
@@ -341,6 +482,13 @@ function App() {
         break;
     }
   };
+
+  if (showLogin) {
+    return <LoginPage
+      onSuccess={() => { setShowLogin(false); setShowLanding(false); setCurrentView('meetings'); }}
+      onBack={() => { setShowLogin(false); setShowLanding(true); }}
+    />;
+  }
 
   if (showInfo) {
     return <ProjectInfoPage
@@ -379,9 +527,16 @@ function App() {
     />;
   }
 
-  if (showLanding) {
+  if (showLanding || (!user && !loading)) {
     return <LandingPage
-      onLaunch={() => { setLaunchSource('landing'); setShowLanding(false); }}
+      onLaunch={() => {
+        setShowLanding(false);
+        if (user) {
+          setShowLogin(false);
+        } else {
+          setShowLogin(true);
+        }
+      }}
       onAbout={() => setShowInfo(true)}
       onGetSoftware={() => setShowAbout(true)}
       onFeatures={() => setShowFeatures(true)}
@@ -389,9 +544,28 @@ function App() {
       onPricing={() => setShowPricing(true)}
     />;
   }
+  
+  if (loading) {
+    return <DashboardSkeleton />;
+  }
 
   return (
     <div className={`flex h-screen font-sans overflow-hidden print:h-auto print:overflow-visible print:bg-white print:text-black ${darkMode ? 'dark' : ''}`}>
+      {/* Firebase Error Banner */}
+      {FIREBASE_ERROR && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-yellow-900/80 border-b border-yellow-600 backdrop-blur-sm p-3">
+          <div className="max-w-6xl mx-auto flex items-center justify-between text-yellow-100 text-sm">
+            <span>⚠️ Firebase not initialized. Running in demo mode with mock data. Check .env configuration.</span>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-3 py-1 bg-yellow-700 hover:bg-yellow-600 rounded text-white text-xs font-medium transition-colors"
+            >
+              Reload
+            </button>
+          </div>
+        </div>
+      )}
+      
       <div className="print:hidden">
         <Aurora
           colorStops={["#cf66ff", "#70aef0", "#e50649"]}
@@ -422,8 +596,29 @@ function App() {
         </div>
       )}
 
+
+      {/* Pop-up urging new users to record their first meeting */}
+      <RecordFirstMeetingPopup
+        isOpen={showFirstMeetPopup}
+        onClose={() => {
+          localStorage.setItem('syncmind_first_meet_popup_closed', 'true');
+          setShowFirstMeetPopup(false);
+        }}
+        onGetSoftware={() => {
+          localStorage.setItem('syncmind_first_meet_popup_closed', 'true');
+          setShowFirstMeetPopup(false);
+          setShowAbout(true); // Route back to Get Software (About) page!
+        }}
+      />
     </div>
   );
 }
 
-export default App;
+export default function AppWithErrorBoundary() {
+  return (
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
+  );
+}
+

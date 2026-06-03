@@ -2,16 +2,11 @@ import React from 'react';
 import { ArrowLeft, Download, Mic, Brain, Zap, Shield, Monitor, ArrowRight, Github, ExternalLink } from 'lucide-react';
 import { GLSLHills } from './ui/glsl-hills';
 
-const DOWNLOAD_URL = 'https://github.com/Boomerforlife/SyncMind_Electron/releases/download/v1.0.0/SyncMind.Setup.1.0.0.exe';
+const DOWNLOAD_URL = 'https://github.com/TejasSharma356/SyncMInd/releases/latest/download/SyncMind.Setup.1.0.0.exe';
 
 const AboutPage = ({ onBack, onLaunch }) => {
     const handleDownload = () => {
-        const link = document.createElement('a');
-        link.href = DOWNLOAD_URL;
-        link.setAttribute('download', 'SyncMind.Setup.1.0.0.exe');
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        window.location.href = DOWNLOAD_URL;
     };
 
     const features = [
@@ -67,13 +62,15 @@ const AboutPage = ({ onBack, onLaunch }) => {
                     </p>
 
                     {/* Download Button */}
-                    <button
-                        onClick={handleDownload}
+                    <a
+                        href={DOWNLOAD_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="inline-flex items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white font-bold px-10 py-5 rounded-2xl text-xl shadow-2xl shadow-blue-500/30 hover:scale-105 active:scale-95 transition-all duration-200 group mb-3"
                     >
                         <Download size={24} className="group-hover:animate-bounce" />
                         Download for Windows
-                    </button>
+                    </a>
                     <p className="text-gray-500 text-xs mb-8">SyncMind.Setup.1.0.0.exe · Requires Windows 10 or later · Free</p>
 
                     <div className="flex items-center gap-3 justify-center">

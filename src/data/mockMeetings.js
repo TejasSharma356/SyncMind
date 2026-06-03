@@ -1,56 +1,22 @@
 export const mockMeetings = [
     {
         meetingId: 'm1',
-        title: 'Project Kickoff & Brainstorming',
-        summary: 'Initial discussion on project goals, architecture, and timeline.',
+        title: '✨ Welcome to SyncMind! (Mock Review)',
+        summary: 'A quick overview of SyncMind\'s automated AI meeting intelligence pipeline and portal dashboard features.',
         createdAt: new Date().toISOString(),
-        transcript: "Speaker 1: Let's start by defining our main objectives for this quarter. Speaker 2: I think our primary focus should be the new user dashboard. Speaker 1: Agreed. Can you take the lead on the frontend implementation? Speaker 2: Sure, I will have a prototype ready by next Tuesday.",
+        transcript: "Speaker 1: Welcome to SyncMind! If you are seeing this, it means you have successfully logged in and completed your onboarding profile. This is a demonstration meeting view showing you how transcripts, action items, and automated insights will populate once you record your first live session.\n\nSpeaker 2: Exactly. The desktop companion app sits silently in your Windows system tray, captures audio from both local speakers and microphones, uploads it securely to our AWS S3 pipeline, and utilizes AI to automatically generate meeting records in near real-time.\n\nSpeaker 1: That means no more manual note-taking. Everything from team alignments, key decisions, and immediate next steps is organized cleanly right here.",
         key_points: [
-            'Defined primary objective: New user dashboard.',
-            'Agreed on a rapid prototyping approach for the frontend.'
+            'This is a demonstration meeting view designed to showcase SyncMind\'s rich analytics.',
+            'SyncMind desktop companion records both mic and system audio in real-time.',
+            'AI pipelines automatically process raw audio into transcripts, key points, and action items.'
         ],
         insights: [
-            { text: 'The team is highly aligned on the quarterly goals.' },
-            { text: 'Frontend development is on the critical path.' }
+            { text: 'This is a mock view. Real meetings will load instantly here once they are recorded via the desktop client.' },
+            { text: 'To record a meeting, you must install the desktop client on your Windows system.' }
         ],
         action_items: [
-            { task: 'Create frontend prototype for dashboard', owner: 'Bob' },
-            { task: 'Draft initial backend API specs', owner: 'Alice' }
-        ]
-    },
-    {
-        meetingId: 'm2',
-        title: 'Weekly Sync: Backend Architecture',
-        summary: 'Reviewing the database schema and API endpoints.',
-        createdAt: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-        transcript: "Speaker 3: I reviewed the API specs Alice drafted. They look good, but we need to refine the authentication flow. Speaker 1: Good catch. I will update the auth endpoints tomorrow.",
-        key_points: [
-            'API specs look solid overall.',
-            'Authentication flow requires refinement.'
-        ],
-        insights: [
-            { text: 'Security considerations were prioritized early in the discussion.' }
-        ],
-        action_items: [
-            { task: 'Update auth endpoints in API specs', owner: 'Alice' }
-        ]
-    },
-    {
-        meetingId: 'm3',
-        title: 'Product Review: Analytics Planning',
-        summary: 'Discussed dashboard metrics, chart priorities, and follow-up ownership.',
-        createdAt: new Date(Date.now() - 3 * 86400000).toISOString(), // 3 days ago
-        transcript: "Speaker 1: The dashboard needs a clearer overview of meeting load. Speaker 2: Frequency should be the first chart because it answers the most common question quickly. Speaker 3: We should also show action item ownership so users can spot follow-up patterns. Speaker 1: Great, let's keep the first version simple and responsive.",
-        key_points: [
-            'Prioritized meeting frequency as the primary analytics chart.',
-            'Agreed to include action item ownership as a lightweight participant signal.'
-        ],
-        insights: [
-            { text: 'Users benefit from quick visibility into meeting volume and follow-up ownership.' }
-        ],
-        action_items: [
-            { task: 'Validate analytics layout on mobile screens', owner: 'Bob' },
-            { task: 'Review chart readability in dark mode', owner: 'Charlie' }
+            { task: 'Download the SyncMind Desktop Companion app', owner: 'New User' },
+            { task: 'Record your first live session using the companion app', owner: 'New User' }
         ]
     }
 ];
