@@ -32,7 +32,10 @@ const TranscriptChat = ({ transcript }) => {
         const match = blockText.match(/^([^:]+):\s*([\s\S]*)$/);
         
         if (match) {
-            const speaker = match[1].trim();
+            let speaker = match[1].trim();
+            if (speaker.toUpperCase() === 'OMITTED' || speaker.toUpperCase() === 'UNKNOWN') {
+                speaker = 'UNKNOWN SPEAKER';
+            }
             const text = cleanText(match[2]);
 
             // Consecutive blocks from the same speaker get merged
