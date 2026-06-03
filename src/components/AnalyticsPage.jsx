@@ -92,8 +92,8 @@ const AnalyticsPage = ({ meetings = [], darkMode = false }) => {
                     <MetricCard
                         icon={Clock}
                         label="Avg duration"
-                        value={`${summary.averageDuration} min`}
-                        detail="Estimated from transcript length"
+                        value={summary.hasDurationData ? `${summary.averageDuration} min` : 'Not available'}
+                        detail={summary.durationSourceDetail}
                     />
                     <MetricCard
                         icon={ListChecks}
@@ -105,7 +105,7 @@ const AnalyticsPage = ({ meetings = [], darkMode = false }) => {
                         icon={Activity}
                         label="Completion rate"
                         value={summary.completionRate === null ? 'Not tracked' : `${summary.completionRate}%`}
-                        detail="Requires completed status on action items"
+                        detail="Based on persisted checklist state"
                     />
                 </div>
 
@@ -149,10 +149,10 @@ const AnalyticsPage = ({ meetings = [], darkMode = false }) => {
                     <div className="xl:col-span-2">
                         <ChartCard
                             title="Duration Distribution"
-                            subtitle="Estimated from transcript word count in the last 30 days"
+                            subtitle="Saved duration metadata is used before transcript estimates"
                         >
-                            {recentMeetings.length === 0 ? (
-                                <EmptyChart message="No meetings in the last 30 days." />
+                            {durationStats.knownCount === 0 ? (
+                                <EmptyChart message={recentMeetings.length === 0 ? 'No meetings in the last 30 days.' : 'No duration data available for this range.'} />
                             ) : (
                                 <ResponsiveContainer width="100%" height={320}>
                                     <PieChart>
