@@ -2,7 +2,7 @@ import React from 'react';
 import { ArrowLeft, Download, Mic, Brain, Zap, Shield, Monitor, ArrowRight, Github, ExternalLink } from 'lucide-react';
 import { GLSLHills } from './ui/glsl-hills';
 
-const DOWNLOAD_URL = 'https://github.com/TejasSharma356/SyncMInd/releases/latest/download/SyncMind_Setup.exe';
+const DOWNLOAD_URL = 'https://github.com/TejasSharma356/SyncMInd/releases/latest/download/SyncMind.Setup.1.0.0.exe';
 
 const AboutPage = ({ onBack, onLaunch }) => {
     const handleDownload = () => {
