@@ -88,6 +88,60 @@ const MeetingDetails = ({ meeting, standalone = false, onBack, onDelete, onUpdat
         window.print();
     };
 
+    const handleExportMarkdown = () => {
+        setIsMenuOpen(false);
+
+        const lines = [];
+
+        lines.push(`# ${meeting.title || meeting.summary || "Untitled Meeting"}`);
+        lines.push(`**Date:** ${new Date(meeting.createdAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}`);
+        lines.push("");
+
+        if (meeting.summary) {
+            lines.push("## Summary");
+            lines.push(meeting.summary);
+            lines.push("");
+        }
+
+        if (meeting.notes) {
+            lines.push("## Meeting Notes");
+            lines.push(meeting.notes);
+            lines.push("");
+        }
+
+        if (meeting.key_points?.length) {
+            lines.push("## Key Points");
+            meeting.key_points.forEach((point) => lines.push(`- ${point}`));
+            lines.push("");
+        }
+
+        if (meeting.insights?.length) {
+            lines.push("## Insights");
+            meeting.insights.forEach((insight) => lines.push(`- ${insight.text}`));
+            lines.push("");
+        }
+
+        if (meeting.action_items?.length) {
+            lines.push("## Action Items");
+            meeting.action_items.forEach((item) => lines.push(`- [ ] ${item.task} *(${item.owner})*`));
+            lines.push("");
+        }
+
+        if (meeting.transcript) {
+            lines.push("## Transcript");
+            lines.push(meeting.transcript);
+            lines.push("");
+        }
+
+        const blob = new Blob([lines.join("\n")], { type: "text/markdown" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${(meeting.title || "meeting").replace(/\s+/g, "_")}.md`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
     const handleViewOriginal = () => {
         setIsMenuOpen(false);
         showToast("Original audio file not available in local mock mode.");
@@ -181,6 +235,10 @@ const MeetingDetails = ({ meeting, standalone = false, onBack, onDelete, onUpdat
                                 <button onClick={handleExportPDF} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                                     <Download size={16} className="text-gray-400" />
                                     <span>Export as PDF</span>
+                                </button>
+                                <button onClick={handleExportMarkdown} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                                    <FileText size={16} className="text-gray-400" />
+                                    <span>Export as Markdown</span>
                                 </button>
                                 <button onClick={handleViewOriginal} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                                     <ExternalLink size={16} className="text-gray-400" />
