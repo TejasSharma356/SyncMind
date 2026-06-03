@@ -32,18 +32,18 @@ function App() {
   // Clear persistent dashboard routing states when logged out to avoid carrying over view state
   useEffect(() => {
     if (!user && !loading) {
-      localStorage.removeItem('syncmind_current_view');
-      localStorage.removeItem('syncmind_selected_meeting_id');
-      localStorage.removeItem('syncmind_previous_view');
+      sessionStorage.removeItem('syncmind_current_view');
+      sessionStorage.removeItem('syncmind_selected_meeting_id');
+      sessionStorage.removeItem('syncmind_previous_view');
       localStorage.removeItem('syncmind_first_meet_popup_closed');
       
-      localStorage.setItem('syncmind_show_landing', 'true');
-      localStorage.setItem('syncmind_show_login', 'false');
-      localStorage.setItem('syncmind_show_about', 'false');
-      localStorage.setItem('syncmind_show_info', 'false');
-      localStorage.setItem('syncmind_show_features', 'false');
-      localStorage.setItem('syncmind_show_demo', 'false');
-      localStorage.setItem('syncmind_show_pricing', 'false');
+      sessionStorage.setItem('syncmind_show_landing', 'true');
+      sessionStorage.setItem('syncmind_show_login', 'false');
+      sessionStorage.setItem('syncmind_show_about', 'false');
+      sessionStorage.setItem('syncmind_show_info', 'false');
+      sessionStorage.setItem('syncmind_show_features', 'false');
+      sessionStorage.setItem('syncmind_show_demo', 'false');
+      sessionStorage.setItem('syncmind_show_pricing', 'false');
     }
   }, [user, loading]);
 
@@ -59,28 +59,28 @@ function App() {
     }
   }, []);
   const [showLanding, setShowLanding] = useState(() => {
-    return localStorage.getItem('syncmind_show_landing') !== 'false';
+    return sessionStorage.getItem('syncmind_show_landing') !== 'false';
   });
   const [showLogin, setShowLogin] = useState(() => {
-    return localStorage.getItem('syncmind_show_login') === 'true';
+    return sessionStorage.getItem('syncmind_show_login') === 'true';
   });
   const [showAbout, setShowAbout] = useState(() => {
-    return localStorage.getItem('syncmind_show_about') === 'true';
+    return sessionStorage.getItem('syncmind_show_about') === 'true';
   });
   const [showInfo, setShowInfo] = useState(() => {
-    return localStorage.getItem('syncmind_show_info') === 'true';
+    return sessionStorage.getItem('syncmind_show_info') === 'true';
   });
   const [showFeatures, setShowFeatures] = useState(() => {
-    return localStorage.getItem('syncmind_show_features') === 'true';
+    return sessionStorage.getItem('syncmind_show_features') === 'true';
   });
   const [showDemo, setShowDemo] = useState(() => {
-    return localStorage.getItem('syncmind_show_demo') === 'true';
+    return sessionStorage.getItem('syncmind_show_demo') === 'true';
   });
   const [showPricing, setShowPricing] = useState(() => {
-    return localStorage.getItem('syncmind_show_pricing') === 'true';
+    return sessionStorage.getItem('syncmind_show_pricing') === 'true';
   });
   const [launchSource, setLaunchSource] = useState(() => {
-    return localStorage.getItem('syncmind_launch_source') || 'landing';
+    return sessionStorage.getItem('syncmind_launch_source') || 'landing';
   });
 
   useEffect(() => {
@@ -158,15 +158,15 @@ function App() {
     };
   }, [showLogin]);
   const [currentView, setCurrentView] = useState(() => {
-    return localStorage.getItem('syncmind_current_view') || 'meetings';
+    return sessionStorage.getItem('syncmind_current_view') || 'meetings';
   });
   const [previousView, setPreviousView] = useState(() => {
-    return localStorage.getItem('syncmind_previous_view') || null;
+    return sessionStorage.getItem('syncmind_previous_view') || null;
   });
   const [meetings, setMeetings] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedMeetingId, setSelectedMeetingId] = useState(() => {
-    return localStorage.getItem('syncmind_selected_meeting_id') || null;
+    return sessionStorage.getItem('syncmind_selected_meeting_id') || null;
   });
 
   const [showFirstMeetPopup, setShowFirstMeetPopup] = useState(false);
@@ -192,33 +192,33 @@ function App() {
 
   // Persist view states in localStorage to protect them against page refreshes
   useEffect(() => {
-    localStorage.setItem('syncmind_show_landing', showLanding);
-    localStorage.setItem('syncmind_show_login', showLogin);
-    localStorage.setItem('syncmind_show_about', showAbout);
-    localStorage.setItem('syncmind_show_info', showInfo);
-    localStorage.setItem('syncmind_show_features', showFeatures);
-    localStorage.setItem('syncmind_show_demo', showDemo);
-    localStorage.setItem('syncmind_show_pricing', showPricing);
-    localStorage.setItem('syncmind_launch_source', launchSource);
+    sessionStorage.setItem('syncmind_show_landing', showLanding);
+    sessionStorage.setItem('syncmind_show_login', showLogin);
+    sessionStorage.setItem('syncmind_show_about', showAbout);
+    sessionStorage.setItem('syncmind_show_info', showInfo);
+    sessionStorage.setItem('syncmind_show_features', showFeatures);
+    sessionStorage.setItem('syncmind_show_demo', showDemo);
+    sessionStorage.setItem('syncmind_show_pricing', showPricing);
+    sessionStorage.setItem('syncmind_launch_source', launchSource);
   }, [showLanding, showLogin, showAbout, showInfo, showFeatures, showDemo, showPricing, launchSource]);
 
   useEffect(() => {
-    localStorage.setItem('syncmind_current_view', currentView);
+    sessionStorage.setItem('syncmind_current_view', currentView);
   }, [currentView]);
 
   useEffect(() => {
     if (previousView) {
-      localStorage.setItem('syncmind_previous_view', previousView);
+      sessionStorage.setItem('syncmind_previous_view', previousView);
     } else {
-      localStorage.removeItem('syncmind_previous_view');
+      sessionStorage.removeItem('syncmind_previous_view');
     }
   }, [previousView]);
 
   useEffect(() => {
     if (selectedMeetingId) {
-      localStorage.setItem('syncmind_selected_meeting_id', selectedMeetingId);
+      sessionStorage.setItem('syncmind_selected_meeting_id', selectedMeetingId);
     } else {
-      localStorage.removeItem('syncmind_selected_meeting_id');
+      sessionStorage.removeItem('syncmind_selected_meeting_id');
     }
   }, [selectedMeetingId]);
 
@@ -552,3 +552,4 @@ export default function AppWithErrorBoundary() {
     </ErrorBoundary>
   );
 }
+
