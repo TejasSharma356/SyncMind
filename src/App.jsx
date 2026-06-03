@@ -35,7 +35,6 @@ function App() {
       sessionStorage.removeItem('syncmind_current_view');
       sessionStorage.removeItem('syncmind_selected_meeting_id');
       sessionStorage.removeItem('syncmind_previous_view');
-      localStorage.removeItem('syncmind_first_meet_popup_closed');
       
       sessionStorage.setItem('syncmind_show_landing', 'true');
       sessionStorage.setItem('syncmind_show_login', 'false');
