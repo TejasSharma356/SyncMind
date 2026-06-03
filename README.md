@@ -15,7 +15,7 @@
 
 Check out the live web dashboard: **[https://sync-mind.vercel.app/](https://sync-mind.vercel.app/)**
 
-> **🔐 Note on Authentication:** SyncMind now features full frontend authentication via Firebase (Email/Password & Google OAuth). However, the backend multi-tenant architecture is still in development, meaning meeting data is temporarily shared across the frontend for demonstration purposes until backend scoping is completed.
+> **🔐 Note on Authentication:** SyncMind now features full authentication via Firebase (Email/Password & Google OAuth).
 
 ---
 

@@ -68,7 +68,6 @@ Looking for something to work on? Here are some tasks we need help with. **All t
 - **Notification System:** The Settings page has notification checkboxes (Meeting Processed, Action Items Reminder) that do nothing. Implement browser push notifications using the Notifications API and wire them up to the existing Settings UI toggles.
 
 ### 🔴 Hard
-- **Multi-Tenant Backend Architecture:** Google OAuth and Firebase Auth are now fully implemented on the frontend. We now need to bridge this to the AWS Lambda backend to scope meeting data per user. This requires adding a `userId` field to the DynamoDB schema and updating all Lambda functions to filter by the authenticated user.
 - **Transcript Sentiment Analysis:** Run per-speaker sentiment scoring across transcript blocks and display a visual "mood timeline" on the Meeting Details page, giving a bird's-eye view of how meeting energy changed over time.
 - **Electron UI Overlay Widget:** Build a transparent, always-on-top, click-through floating widget for the desktop app (using Electron's `setIgnoreMouseEvents` + frameless window) that hovers over any meeting call to show live recording status and action item count without interrupting the call.
 - **Live Audio Playback Sync:** Add an embedded audio player to the `MeetingDetails` view that streams the S3 audio file and highlights the corresponding transcript speaker block in real time as playback progresses.
