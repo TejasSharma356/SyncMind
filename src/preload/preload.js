@@ -21,7 +21,7 @@ contextBridge.exposeInMainWorld('api', {
     // Auth
     setAuthToken: (token) => ipcRenderer.send('set-auth-token', token),
     // Preload runs in Node context — read process.env directly, no IPC needed
-    getWebAppUrl: () => process.env.VITE_WEB_APP_URL || 'https://sync-mind-test.vercel.app',
+    getWebAppUrl: () => process.env.VITE_WEB_APP_URL || 'https://sync-mind.vercel.app',
 
     // Events from main
     onAudioStatus: (callback) => {

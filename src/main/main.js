@@ -1,22 +1,68 @@
+// ─── EARLY STARTUP DIAGNOSTIC ────────────────────────────────────────────────
+// Writes a step-by-step log to %TEMP%\syncmind_startup.log so we can see
+// exactly where the process is dying on any machine.
+const _fs = require('fs');
+const _os = require('os');
+const _path = require('path');
+const _startupLog = _path.join(_os.tmpdir(), 'syncmind_startup.log');
+function _log(msg) {
+    try { _fs.appendFileSync(_startupLog, `[${new Date().toISOString()}] ${msg}\n`); } catch(e) {}
+}
+_log('STEP 1: main.js started');
+// ─────────────────────────────────────────────────────────────────────────────
+
 const { app, BrowserWindow, BrowserView, ipcMain, desktopCapturer, dialog, shell } = require('electron');
+_log('STEP 2: electron required');
 const path = require('path');
 const fs = require('fs');
 const dotenv = require('dotenv');
 
 // Load environment variables based on environment
+_log('STEP 3: loading .env');
 const envPath = app.isPackaged
     ? path.join(process.resourcesPath, '.env')
     : path.resolve(app.getAppPath(), '.env');
 
 dotenv.config({ path: envPath });
+_log('STEP 4: .env loaded from: ' + envPath);
 
 const http = require('http');
 const { spawn } = require('child_process');
+
+// Disable hardware acceleration — prevents silent GPU crash on machines
+// with older/integrated graphics drivers (common cause of "app doesn't open").
+// Must be called before app.whenReady().
+_log('STEP 5: disabling hardware acceleration');
+app.disableHardwareAcceleration();
+_log('STEP 6: hardware acceleration disabled');
 
 let mainWindow;
 let lastHeartbeatTime = 0;
 let loginRequestActive = false;
 let localServer = null;
+
+// Safe crash logger — uses a temp path before app is ready, userData path after
+function getCrashLogPath() {
+    try { return path.join(app.getPath('userData'), 'crash_log.txt'); } catch(e) {}
+    try { return path.join(require('os').tmpdir(), 'syncmind_crash_log.txt'); } catch(e) {}
+    return null;
+}
+
+process.on('uncaughtException', (err) => {
+    console.error('UNCAUGHT EXCEPTION:', err);
+    try {
+        const logPath = getCrashLogPath();
+        if (logPath) fs.appendFileSync(logPath, `[${new Date().toISOString()}] UNCAUGHT EXCEPTION: ${err.stack || err}\n`);
+    } catch(e){}
+});
+
+process.on('unhandledRejection', (reason) => {
+    console.error('UNHANDLED REJECTION:', reason);
+    try {
+        const logPath = getCrashLogPath();
+        if (logPath) fs.appendFileSync(logPath, `[${new Date().toISOString()}] UNHANDLED REJECTION: ${reason}\n`);
+    } catch(e){}
+});
 
 // Start a tiny local HTTP server on port 5185 for communicating with already open web pages
 function startLocalServer() {
@@ -56,13 +102,24 @@ function startLocalServer() {
         res.end();
     });
 
+    localServer.on('error', (err) => {
+        console.error('[LOCAL SERVER] Failed to start:', err.message);
+        try {
+            fs.appendFileSync(path.join(app.getPath('userData'), 'crash_log.txt'), `[${new Date().toISOString()}] LOCAL SERVER ERROR: ${err.message}\n`);
+        } catch (e) {}
+    });
+
     localServer.listen(5185, '127.0.0.1', () => {
         console.log('[LOCAL SERVER] Running on http://127.0.0.1:5185');
     });
 }
 
-// Meeting Logger Path
-const logFilePath = path.join(app.getPath('userData'), 'meeting_log.txt');
+// Meeting Logger Path — computed lazily after app is ready to avoid pre-ready crash
+let logFilePath = null;
+function getLogFilePath() {
+    if (!logFilePath) logFilePath = path.join(app.getPath('userData'), 'meeting_log.txt');
+    return logFilePath;
+}
 
 ipcMain.handle('get-whisper-mode', () => false);
 
@@ -70,7 +127,7 @@ let globalAuthToken = "";
 let meetingStartTime = null;
 
 ipcMain.handle('get-web-app-url', () => {
-    return process.env.VITE_WEB_APP_URL || 'https://sync-mind-test.vercel.app';
+    return process.env.VITE_WEB_APP_URL || 'https://sync-mind.vercel.app';
 });
 
 ipcMain.handle('open-external', (event, url) => {
@@ -105,10 +162,17 @@ function createWindow() {
         alwaysOnTop: false,
     });
 
-    // Show window only after content is painted to prevent white screen flash
-    mainWindow.once('ready-to-show', () => {
-        mainWindow.show();
-    });
+    // Show window only after content is painted — with 5s fallback
+    // so window always appears even if ready-to-show never fires
+    let windowShown = false;
+    const showWindow = () => {
+        if (!windowShown && mainWindow) {
+            windowShown = true;
+            mainWindow.show();
+        }
+    };
+    mainWindow.once('ready-to-show', showWindow);
+    setTimeout(showWindow, 5000); // Fallback: force-show after 5 seconds
 
     mainWindow.on('closed', () => {
         mainWindow = null;
@@ -163,8 +227,11 @@ const handleDeepLink = (url) => {
     }
 };
 
+_log('STEP 7: requesting single instance lock');
 const gotTheLock = app.requestSingleInstanceLock();
+_log('STEP 8: gotTheLock = ' + gotTheLock);
 if (!gotTheLock) {
+    _log('STEP 8a: another instance running, quitting');
     app.quit();
 } else {
     app.on('second-instance', (event, commandLine, workingDirectory) => {
@@ -178,9 +245,13 @@ if (!gotTheLock) {
         handleDeepLink(url);
     });
 
+    _log('STEP 9: waiting for app.whenReady');
     app.whenReady().then(() => {
+        _log('STEP 10: app ready, calling createWindow');
         createWindow();
+        _log('STEP 11: createWindow done, starting local server');
         startLocalServer();
+        _log('STEP 12: local server started');
 
         // macOS deep linking (app is already running)
         app.on('open-url', (event, url) => {
@@ -502,7 +573,7 @@ ipcMain.on('save-log', (event, text) => {
     try {
         const timestamp = new Date().toISOString();
         const logEntry = `[${timestamp}] ${text}\n`;
-        fs.appendFileSync(logFilePath, logEntry);
+        fs.appendFileSync(getLogFilePath(), logEntry);
     } catch (err) {
         console.error('Failed to write to meeting log:', err);
     }
