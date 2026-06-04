@@ -224,6 +224,11 @@ function App() {
   // Derive the selected meeting
   const selectedMeeting = meetings.find(m => m.meetingId === selectedMeetingId) || null;
 
+  const showGlobalToast = (message) => {
+    setGlobalToastMessage(message);
+    setTimeout(() => setGlobalToastMessage(null), 3000);
+  };
+
   useEffect(() => {
     let isMockMode = false;
     let interval;
@@ -232,13 +237,10 @@ function App() {
       isMockMode = true; // Mark as mock mode
       if (interval) clearInterval(interval); // Clear the polling loop so edits persist
 
-      const sortedMockData = [...mockMeetings].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      const sortedMockData = applyLocalMeetingState(mockMeetings);
       setMeetings(sortedMockData);
       setSelectedMeetingId(prev => {
-        if (!prev && sortedMockData.length > 0) {
-          return sortedMockData[0].meetingId;
-        }
-        return prev;
+        return selectExistingMeetingId(prev, sortedMockData);
       });
     };
 
@@ -261,8 +263,7 @@ function App() {
         if (!response.ok) throw new Error('Failed to fetch');
         const data = await response.json();
 
-        // Sort by newest first
-        const sortedData = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        const sortedData = applyLocalMeetingState(data);
 
         // Default mock walkthrough meeting for new users with 0 records
         if (sortedData.length === 0 && mockMeetings.length > 0) {
@@ -272,10 +273,7 @@ function App() {
         setMeetings(sortedData);
         // Automatically select the first meeting on initial load if none selected
         setSelectedMeetingId(prev => {
-          if (!prev && sortedData.length > 0) {
-            return sortedData[0].meetingId;
-          }
-          return prev;
+          return selectExistingMeetingId(prev, sortedData);
         });
       } catch (err) {
         console.warn("Failed to fetch meetings. Using mock data for local testing.", err);
@@ -293,8 +291,9 @@ function App() {
   }, [user]); // Add user to dependency array so it refetches when login state changes
 
 
-  const handleDeleteMeeting = (meetingId) => {
-    const updatedMeetings = meetings.filter(m => m.meetingId !== meetingId);
+  const handleDeleteMeeting = async (meetingId) => {
+    const previousMeetings = meetings;
+    const updatedMeetings = previousMeetings.filter(m => m.meetingId !== meetingId);
     setMeetings(updatedMeetings);
     if (selectedMeetingId === meetingId) {
       setSelectedMeetingId(updatedMeetings.length > 0 ? updatedMeetings[0].meetingId : null);
@@ -304,13 +303,78 @@ function App() {
       setCurrentView(previousView || 'meetings');
       setPreviousView(null);
     }
+    persistLocalMeetingDelete(meetingId);
+
+    try {
+      const endpoint = getMeetingApiUrl(meetingId);
+      if (endpoint) {
+        const response = await fetch(endpoint, { method: 'DELETE' });
+        if (!response.ok) throw new Error('Delete request failed');
+      }
+      const result = {
+        ok: true,
+        localOnly: !API_URL,
+        message: API_URL ? 'Meeting deleted.' : 'Meeting deleted locally.',
+      };
+      showGlobalToast(result.message);
+      return result;
+    } catch (error) {
+      console.warn('Delete failed in API mode. Persisting a local delete fallback.', error);
+      const result = {
+        ok: true,
+        localOnly: true,
+        message: 'Meeting deleted locally. Backend delete is unavailable.',
+      };
+      showGlobalToast(result.message);
+      return result;
+    }
   };
 
-  const handleUpdateMeeting = (updatedMeeting) => {
-    const updatedMeetings = meetings.map(m => 
+  const handleUpdateMeeting = async (updatedMeeting) => {
+    const previousMeetings = meetings;
+    const updatedMeetings = previousMeetings.map(m =>
       m.meetingId === updatedMeeting.meetingId ? updatedMeeting : m
     );
     setMeetings(updatedMeetings);
+    persistLocalMeetingChange(updatedMeeting);
+
+    try {
+      const endpoint = getMeetingApiUrl(updatedMeeting.meetingId);
+      let savedMeeting = updatedMeeting;
+
+      if (endpoint) {
+        const response = await fetch(endpoint, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updatedMeeting),
+        });
+        if (!response.ok) throw new Error('Update request failed');
+
+        const responseText = await response.text();
+        savedMeeting = responseText ? JSON.parse(responseText) : updatedMeeting;
+        if (!savedMeeting.meetingId) savedMeeting = updatedMeeting;
+        setMeetings(currentMeetings => currentMeetings.map(m =>
+          m.meetingId === savedMeeting.meetingId ? savedMeeting : m
+        ));
+      }
+
+      persistLocalMeetingChange(savedMeeting);
+      return {
+        ok: true,
+        localOnly: !API_URL,
+        meeting: savedMeeting,
+        message: API_URL ? 'Meeting updated.' : 'Meeting updated locally.',
+      };
+    } catch (error) {
+      persistLocalMeetingChange(updatedMeeting);
+      console.warn('Update failed in API mode. Persisting a local fallback.', error);
+      return {
+        ok: true,
+        localOnly: true,
+        meeting: updatedMeeting,
+        message: 'Meeting saved locally. Backend update is unavailable.',
+      };
+    }
   };
 
   const [darkMode, setDarkMode] = useState(true);
@@ -525,6 +589,12 @@ function App() {
         {renderContent()}
       </div>
 
+      {globalToastMessage && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-4 duration-300 print:hidden">
+          <CheckCircle2 size={18} className="text-emerald-400 dark:text-emerald-600" />
+          <span className="text-sm font-medium">{globalToastMessage}</span>
+        </div>
+      )}
 
 
       {/* Pop-up urging new users to record their first meeting */}
