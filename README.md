@@ -91,6 +91,8 @@ Our web application acts as the nerve center for all your meeting data.
 
 ## 🛠️ Local Development
 
+> **⚠️ Note on Docker/Containerization:** SyncMind uses a fully serverless, cloud-native architecture (Vercel + AWS Lambda). Because we do not run a traditional Node.js backend server or SQL database, **there is no Docker or `docker-compose` setup for this repository**. Contributors simply run the frontend locally and connect to their sandbox AWS environments.
+
 Because SyncMind is a multi-part ecosystem, the repository uses different branches for different components.
 
 ### 1. Web Dashboard (`main` branch)
@@ -103,8 +105,11 @@ cd SyncMInd/syncmind
 npm install
 
 # 3. Set up environment variables
-# Create a .env file and add your actual API endpoint:
+# Create a .env file and add your actual API endpoint and Firebase config:
 # VITE_API_URL=https://your-api-gateway-url.amazonaws.com/dev/items
+# VITE_FIREBASE_API_KEY=your_api_key
+# VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
+# VITE_FIREBASE_PROJECT_ID=your_project_id
 
 # 4. Start the development server
 npm run dev
