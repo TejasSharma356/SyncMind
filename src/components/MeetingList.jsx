@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Search } from 'lucide-react';
+import { Search, Video } from 'lucide-react';
 
-const MeetingList = ({ meetings, selectedId, onSelect, isLoading }) => {
+const MeetingList = ({ meetings = [], selectedId, onSelect, isLoading }) => {
     const [searchTerm, setSearchTerm] = useState('');
+    const hasMeetings = meetings.length > 0;
 
     const filteredMeetings = meetings.filter(meeting => {
         const titleMatch = (meeting.title || '').toLowerCase().includes(searchTerm.toLowerCase());
@@ -14,16 +15,18 @@ const MeetingList = ({ meetings, selectedId, onSelect, isLoading }) => {
         <div className="w-full h-full bg-transparent flex flex-col border-r border-gray-200 dark:border-gray-800 transition-colors duration-200">
             <div className="p-6 pb-4">
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Meetings</h2>
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                    <input
-                        type="text"
-                        placeholder="Search past meetings..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg pl-10 pr-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    />
-                </div>
+                {hasMeetings && (
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                        <input
+                            type="text"
+                            placeholder="Search past meetings..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg pl-10 pr-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        />
+                    </div>
+                )}
             </div>
 
             <div className="flex-1 overflow-y-auto">
@@ -37,6 +40,20 @@ const MeetingList = ({ meetings, selectedId, onSelect, isLoading }) => {
                             </div>
                         </div>
                     ))
+                ) : !hasMeetings ? (
+                    <div className="flex min-h-full items-center justify-center px-6 py-12">
+                        <div className="mx-auto flex max-w-xs flex-col items-center text-center">
+                            <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-blue-50 text-blue-500 dark:bg-blue-900/20 dark:text-blue-300">
+                                <Video size={40} strokeWidth={1.8} />
+                            </div>
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                No meetings yet
+                            </h3>
+                            <p className="mt-2 text-sm leading-6 text-gray-500 dark:text-gray-400">
+                                Recorded meetings will appear here with summaries, notes, transcripts, and action items.
+                            </p>
+                        </div>
+                    </div>
                 ) : filteredMeetings.length === 0 ? (
                     <div className="p-6 text-center text-gray-500 text-sm">
                         No meetings found matching "{searchTerm}"
