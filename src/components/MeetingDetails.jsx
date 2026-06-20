@@ -19,25 +19,7 @@ import {
 import TranscriptChat from './TranscriptChat';
 import { useAuth } from '../contexts/AuthContext';
 
-const MeetingDetails = ({ meeting, standalone = false, onBack, onDelete, onUpdate, isLoading }) => {
-    const { user } = useAuth();
-    const [completedTasks, setCompletedTasks] = useState(new Set());
-
-    // Initialize completed action items checklist state when meeting changes
-    useEffect(() => {
-        if (meeting && meeting.action_items) {
-            const completed = new Set();
-            meeting.action_items.forEach((item, index) => {
-                if (item.completed) {
-                    completed.add(index);
-                }
-            });
-            setCompletedTasks(completed);
-        } else {
-            setCompletedTasks(new Set());
-        }
-    }, [meeting]);
-
+const MeetingDetails = ({ meeting, standalone = false, onBack, onDelete, onUpdate }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editTitle, setEditTitle] = useState('');
@@ -45,6 +27,9 @@ const MeetingDetails = ({ meeting, standalone = false, onBack, onDelete, onUpdat
     const [editNotes, setEditNotes] = useState('');
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [toastMessage, setToastMessage] = useState(null);
+    const [isSaving, setIsSaving] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [updatingTaskIndex, setUpdatingTaskIndex] = useState(null);
     const menuRef = useRef(null);
 
     // Close menu when clicking outside
@@ -78,18 +63,25 @@ const MeetingDetails = ({ meeting, standalone = false, onBack, onDelete, onUpdat
         setIsEditModalOpen(true);
     };
 
-    const handleSaveEdit = () => {
-        if (editTitle.trim() !== "") {
-            if (onUpdate) {
-                onUpdate({ 
+    const handleSaveEdit = async () => {
+        if (editTitle.trim() !== "" && !isSaving) {
+            setIsSaving(true);
+            const updatedMeeting = {
                     ...meeting, 
                     title: editTitle.trim(),
                     summary: editSummary.trim(),
                     notes: editNotes.trim()
-                });
+                };
+
+            if (onUpdate) {
+                const result = await onUpdate(updatedMeeting);
+                showToast(result?.message || "Meeting info updated!");
+            } else {
+                showToast("Meeting info updated locally.");
             }
+
+            setIsSaving(false);
             setIsEditModalOpen(false);
-            showToast("Meeting info updated!");
         }
     };
 
@@ -170,73 +162,32 @@ const MeetingDetails = ({ meeting, standalone = false, onBack, onDelete, onUpdat
         setIsDeleteModalOpen(true);
     };
 
-    const confirmDelete = () => {
+    const confirmDelete = async () => {
+        if (isDeleting) return;
+        setIsDeleting(true);
         setIsDeleteModalOpen(false);
         if (onDelete) {
-            onDelete(meeting.meetingId);
+            const result = await onDelete(meeting.meetingId);
+            showToast(result?.message || "Meeting deleted.");
         }
+        setIsDeleting(false);
     };
 
     const toggleTask = async (index) => {
-        if (!meeting || !meeting.action_items) return;
+        if (updatingTaskIndex !== null) return;
 
-        const nextCompleted = !completedTasks.has(index);
-        
-        // Update local state instantly for optimal responsiveness
-        setCompletedTasks(prev => {
-            const next = new Set(prev);
-            if (next.has(index)) {
-                next.delete(index);
-            } else {
-                next.add(index);
-            }
-            return next;
-        });
+        const updatedActionItems = (meeting.action_items || []).map((item, itemIndex) => (
+            itemIndex === index ? { ...item, completed: item.completed !== true } : item
+        ));
+        const updatedMeeting = { ...meeting, action_items: updatedActionItems };
+        const nextCompleted = updatedActionItems[index]?.completed === true;
 
-        // Compute new action items list
-        const updatedActionItems = meeting.action_items.map((item, idx) => {
-            if (idx === index) {
-                return { ...item, completed: nextCompleted };
-            }
-            return item;
-        });
-
-        // Update local React tree
-        const updatedMeeting = {
-            ...meeting,
-            action_items: updatedActionItems
-        };
+        setUpdatingTaskIndex(index);
         if (onUpdate) {
-            onUpdate(updatedMeeting);
+            const result = await onUpdate(updatedMeeting);
+            showToast(result?.message || (nextCompleted ? "Action item completed." : "Action item reopened."));
         }
-
-        // Persist to AWS DynamoDB
-        const API_URL = import.meta.env.VITE_API_URL;
-        if (API_URL && meeting.meetingId && !meeting.meetingId.startsWith('m')) {
-            try {
-                let headers = {
-                    'Content-Type': 'application/json'
-                };
-                if (user) {
-                    const token = await user.getIdToken();
-                    headers['Authorization'] = `Bearer ${token}`;
-                }
-                const response = await fetch(`${API_URL}?action=updateActionItems`, {
-                    method: 'PATCH',
-                    headers,
-                    body: JSON.stringify({
-                        meetingId: meeting.meetingId,
-                        action_items: updatedActionItems
-                    })
-                });
-                if (!response.ok) {
-                    throw new Error("AWS Server responded with status: " + response.status);
-                }
-                console.log("Action item status synchronized with cloud!");
-            } catch (err) {
-                console.error("Failed to sync action item completed status with AWS cloud:", err);
-            }
-        }
+        setUpdatingTaskIndex(null);
     };
     if (isLoading) {
         return (
@@ -439,11 +390,13 @@ const MeetingDetails = ({ meeting, standalone = false, onBack, onDelete, onUpdat
                         </h2>
                         <div className="grid gap-4 w-fit max-w-full">
                             {meeting.action_items.map((item, index) => {
-                                const isCompleted = completedTasks.has(index);
+                                const isCompleted = item.completed === true;
+                                const isUpdating = updatingTaskIndex === index;
                                 return (
                                     <button
                                         key={index}
                                         onClick={() => toggleTask(index)}
+                                        disabled={isUpdating}
                                         className={`w-fit max-w-full text-left p-6 rounded-2xl border transition-all flex flex-col sm:flex-row gap-8 sm:justify-between sm:items-center group
                                             ${isCompleted
                                                 ? 'border-green-200 bg-green-50 dark:border-green-900/50 dark:bg-green-900/10'
@@ -461,7 +414,7 @@ const MeetingDetails = ({ meeting, standalone = false, onBack, onDelete, onUpdat
                                             <span className={`text-base lg:text-lg font-medium transition-colors ${isCompleted
                                                 ? 'text-gray-400 dark:text-gray-500 line-through'
                                                 : 'text-gray-900 dark:text-gray-100'
-                                                }`}>{item.task}</span>
+                                                }`}>{isUpdating ? 'Updating...' : item.task}</span>
                                         </div>
                                         <div className="flex items-center gap-2 pl-10 sm:pl-0">
                                             <Users size={18} className={isCompleted ? 'text-gray-400' : 'text-blue-500'} />
@@ -528,7 +481,7 @@ const MeetingDetails = ({ meeting, standalone = false, onBack, onDelete, onUpdat
 
                             <div className="flex gap-3 justify-end">
                                 <button onClick={() => setIsEditModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">Cancel</button>
-                                <button onClick={handleSaveEdit} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm shadow-blue-600/20">Save Changes</button>
+                                <button onClick={handleSaveEdit} disabled={isSaving} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 rounded-lg transition-colors shadow-sm shadow-blue-600/20">{isSaving ? 'Saving...' : 'Save Changes'}</button>
                             </div>
                         </div>
                     </div>
@@ -549,7 +502,7 @@ const MeetingDetails = ({ meeting, standalone = false, onBack, onDelete, onUpdat
                             </div>
                             <div className="flex gap-3 justify-end">
                                 <button onClick={() => setIsDeleteModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">Cancel</button>
-                                <button onClick={confirmDelete} className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors shadow-sm shadow-red-600/20">Delete Meeting</button>
+                                <button onClick={confirmDelete} disabled={isDeleting} className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:bg-red-400 rounded-lg transition-colors shadow-sm shadow-red-600/20">{isDeleting ? 'Deleting...' : 'Delete Meeting'}</button>
                             </div>
                         </div>
                     </div>
