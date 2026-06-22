@@ -105,11 +105,13 @@ cd SyncMInd/syncmind
 npm install
 
 # 3. Set up environment variables
-# Create a .env file and add your actual API endpoint and Firebase config:
-# VITE_API_URL=https://your-api-gateway-url.amazonaws.com/dev/items
-# VITE_FIREBASE_API_KEY=your_api_key
-# VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
-# VITE_FIREBASE_PROJECT_ID=your_project_id
+# This will create a boilerplate .env file. Remember to update it with your actual keys!
+cat <<EOT > .env
+VITE_API_URL=https://your-api-gateway-url.amazonaws.com/dev/items
+VITE_FIREBASE_API_KEY=your_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
+VITE_FIREBASE_PROJECT_ID=your_project_id
+EOT
 
 # 4. Start the development server
 npm run dev
