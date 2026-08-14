@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Search } from 'lucide-react';
+import { getEstimatedDurationMinutes } from '../utils/analyticsHelpers';
 
 const MeetingList = ({ meetings, selectedId, onSelect, isLoading }) => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -42,7 +43,10 @@ const MeetingList = ({ meetings, selectedId, onSelect, isLoading }) => {
                         No meetings found matching "{searchTerm}"
                     </div>
                 ) : (
-                    filteredMeetings.map((meeting) => (
+                    filteredMeetings.map((meeting) => {
+                        const durationMinutes = getEstimatedDurationMinutes(meeting.transcript || '');
+
+                        return (
                         <div
                             key={meeting.meetingId}
                             onClick={() => onSelect(meeting.meetingId)}
@@ -60,10 +64,15 @@ const MeetingList = ({ meetings, selectedId, onSelect, isLoading }) => {
                                 </h3>
                             </div>
 
-                            <div className="flex items-center gap-2 mt-3">
+                            <div className="flex items-center gap-2 flex-wrap mt-3">
                                 <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-[10px] font-medium rounded-md">
                                     {new Date(meeting.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                                 </span>
+                                {durationMinutes > 0 && (
+                                    <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-[10px] font-medium rounded-md">
+                                        {durationMinutes} min
+                                    </span>
+                                )}
                                 {meeting.action_items && meeting.action_items.length > 0 && (
                                     <span className="px-2 py-0.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 text-[10px] font-medium rounded-md">
                                         {meeting.action_items.length} Action Items
@@ -71,7 +80,8 @@ const MeetingList = ({ meetings, selectedId, onSelect, isLoading }) => {
                                 )}
                             </div>
                         </div>
-                    )))}
+                        );
+                    }))}
             </div>
         </div>
     );
