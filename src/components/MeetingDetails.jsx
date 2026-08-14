@@ -389,7 +389,7 @@ const MeetingDetails = ({ meeting, standalone = false, onBack, onDelete, onUpdat
                         <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
                             Transcript
                         </h2>
-                        <TranscriptChat transcript={meeting.transcript} />
+                        <TranscriptChat transcript={meeting.transcript} meetingId={meeting.meetingId} />
                     </section>
                 )}
 
