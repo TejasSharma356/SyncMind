@@ -1,13 +1,42 @@
 import React, { useState } from 'react';
 import { Search } from 'lucide-react';
 
+const DATE_FILTERS = [
+    { key: 'all', label: 'All' },
+    { key: 'today', label: 'Today' },
+    { key: '7d', label: 'Last 7 Days' },
+    { key: '30d', label: 'Last 30 Days' },
+];
+
+const isWithinDateFilter = (createdAt, filterKey) => {
+    if (filterKey === 'all') return true;
+
+    const meetingDate = new Date(createdAt);
+    if (Number.isNaN(meetingDate.getTime())) return false;
+
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    if (filterKey === 'today') {
+        return meetingDate >= startOfToday;
+    }
+
+    const daysByFilter = { '7d': 7, '30d': 30 };
+    const days = daysByFilter[filterKey];
+    const startDate = new Date(startOfToday.getTime() - (days - 1) * 24 * 60 * 60 * 1000);
+    return meetingDate >= startDate;
+};
+
 const MeetingList = ({ meetings, selectedId, onSelect, isLoading }) => {
     const [searchTerm, setSearchTerm] = useState('');
+    const [dateFilter, setDateFilter] = useState('all');
 
     const filteredMeetings = meetings.filter(meeting => {
         const titleMatch = (meeting.title || '').toLowerCase().includes(searchTerm.toLowerCase());
         const summaryMatch = (meeting.summary || '').toLowerCase().includes(searchTerm.toLowerCase());
-        return titleMatch || summaryMatch;
+        const searchMatch = titleMatch || summaryMatch;
+        const dateMatch = isWithinDateFilter(meeting.createdAt, dateFilter);
+        return searchMatch && dateMatch;
     });
 
     return (
@@ -24,6 +53,20 @@ const MeetingList = ({ meetings, selectedId, onSelect, isLoading }) => {
                         className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg pl-10 pr-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     />
                 </div>
+                <div className="flex flex-wrap gap-2 mt-3">
+                    {DATE_FILTERS.map(({ key, label }) => (
+                        <button
+                            key={key}
+                            onClick={() => setDateFilter(key)}
+                            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${dateFilter === key
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+                                }`}
+                        >
+                            {label}
+                        </button>
+                    ))}
+                </div>
             </div>
 
             <div className="flex-1 overflow-y-auto">
@@ -39,7 +82,11 @@ const MeetingList = ({ meetings, selectedId, onSelect, isLoading }) => {
                     ))
                 ) : filteredMeetings.length === 0 ? (
                     <div className="p-6 text-center text-gray-500 text-sm">
-                        No meetings found matching "{searchTerm}"
+                        {searchTerm
+                            ? `No meetings found matching "${searchTerm}"`
+                            : dateFilter !== 'all'
+                                ? `No meetings in this range.`
+                                : 'No meetings found.'}
                     </div>
                 ) : (
                     filteredMeetings.map((meeting) => (
