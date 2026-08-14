@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { Check, Pencil, X } from 'lucide-react';
+import { getSpeakerNameMap, setSpeakerName } from '../utils/speakerNames';
 
 const speakerColors = [
     'text-blue-600 dark:text-blue-400',
@@ -9,7 +11,17 @@ const speakerColors = [
     'text-cyan-600 dark:text-cyan-400'
 ];
 
-const TranscriptChat = ({ transcript }) => {
+const TranscriptChat = ({ transcript, meetingId }) => {
+    const [nameMap, setNameMap] = useState(() => getSpeakerNameMap(meetingId));
+    const [editingKey, setEditingKey] = useState(null);
+    const [editValue, setEditValue] = useState('');
+
+    // Reset the rename mapping/edit state whenever the viewed meeting changes
+    useEffect(() => {
+        setNameMap(getSpeakerNameMap(meetingId));
+        setEditingKey(null);
+    }, [meetingId]);
+
     if (!transcript) return null;
 
     // Clean up punctuation spacing (e.g. "word , ." -> "word,.")
@@ -68,6 +80,20 @@ const TranscriptChat = ({ transcript }) => {
         return speakerColorMap[normalized];
     };
 
+    const startEditing = (blockIndex, originalSpeaker) => {
+        const normalized = originalSpeaker.trim().toLowerCase();
+        setEditingKey(blockIndex);
+        setEditValue(nameMap[normalized] || originalSpeaker);
+    };
+
+    const commitEdit = (originalSpeaker) => {
+        setSpeakerName(meetingId, originalSpeaker, editValue);
+        setNameMap(getSpeakerNameMap(meetingId));
+        setEditingKey(null);
+    };
+
+    const cancelEdit = () => setEditingKey(null);
+
     return (
         <div className="flex flex-col items-start gap-6 mt-4">
             {grouped.map((block, i) => {
@@ -80,12 +106,55 @@ const TranscriptChat = ({ transcript }) => {
                 }
 
                 const colorClass = getSpeakerColorClass(block.speaker);
+                const normalized = block.speaker.trim().toLowerCase();
+                const displayName = nameMap[normalized] || block.speaker;
+                const isEditing = editingKey === i;
 
                 return (
                     <div key={i} className="flex flex-col gap-3 bg-gray-100 dark:bg-gray-800/60 p-6 rounded-3xl text-lg w-full max-w-4xl shadow-sm border border-gray-100 dark:border-gray-800/50">
-                        <span className={`text-sm font-bold uppercase tracking-wider ${colorClass}`}>
-                            {block.speaker}
-                        </span>
+                        {isEditing ? (
+                            <div className="flex items-center gap-2">
+                                <input
+                                    autoFocus
+                                    type="text"
+                                    value={editValue}
+                                    onChange={(e) => setEditValue(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') commitEdit(block.speaker);
+                                        if (e.key === 'Escape') cancelEdit();
+                                    }}
+                                    className={`text-sm font-bold uppercase tracking-wider bg-transparent border-b border-current outline-none ${colorClass}`}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => commitEdit(block.speaker)}
+                                    title="Save name"
+                                    className="text-emerald-500 hover:text-emerald-600"
+                                >
+                                    <Check size={14} />
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={cancelEdit}
+                                    title="Cancel"
+                                    className="text-gray-400 hover:text-gray-600"
+                                >
+                                    <X size={14} />
+                                </button>
+                            </div>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={() => meetingId && startEditing(i, block.speaker)}
+                                title={meetingId ? 'Click to rename speaker' : undefined}
+                                className={`group/speaker w-fit flex items-center gap-1.5 bg-transparent border-0 p-0 text-left text-sm font-bold uppercase tracking-wider ${colorClass} ${meetingId ? 'cursor-text' : 'cursor-default'}`}
+                            >
+                                {displayName}
+                                {meetingId && (
+                                    <Pencil size={11} className="opacity-0 group-hover/speaker:opacity-60 transition-opacity" />
+                                )}
+                            </button>
+                        )}
                         <span className="leading-relaxed text-gray-800 dark:text-gray-200">
                             {block.text}
                         </span>
