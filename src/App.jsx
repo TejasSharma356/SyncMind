@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Sidebar from './components/Sidebar';
 import MeetingList from './components/MeetingList';
 import MeetingDetails from './components/MeetingDetails';
@@ -20,6 +20,7 @@ import RecordFirstMeetingPopup from './components/RecordFirstMeetingPopup';
 import { mockMeetings } from './data/mockMeetings';
 import { logout, isFirebaseInitialized, getFirebaseError } from './firebase';
 import { useAuth } from './contexts/AuthContext';
+import { sendNotification, getMeetingProcessedPref, getActionItemsReminderPref } from './utils/notifications';
 
 const API_URL = import.meta.env.VITE_API_URL;
 const FIREBASE_ERROR = getFirebaseError();
@@ -224,9 +225,41 @@ function App() {
   // Derive the selected meeting
   const selectedMeeting = meetings.find(m => m.meetingId === selectedMeetingId) || null;
 
+  // Tracks meeting IDs already seen, so we only notify about genuinely new meetings
+  const knownMeetingIdsRef = useRef(null);
+
+  const notifyForNewMeetings = (list) => {
+    if (knownMeetingIdsRef.current === null) {
+      // First load establishes the baseline; nothing to notify about yet
+      knownMeetingIdsRef.current = new Set(list.map(m => m.meetingId));
+      return;
+    }
+
+    const newMeetings = list.filter(m => !knownMeetingIdsRef.current.has(m.meetingId));
+    knownMeetingIdsRef.current = new Set(list.map(m => m.meetingId));
+
+    newMeetings.forEach((meeting) => {
+      const title = meeting.title || meeting.summary || 'Untitled Meeting';
+
+      if (getMeetingProcessedPref()) {
+        sendNotification('Meeting processed', { body: title });
+      }
+
+      const pendingCount = (meeting.action_items || []).filter(item => !item.completed).length;
+      if (pendingCount > 0 && getActionItemsReminderPref()) {
+        sendNotification('Action items pending', {
+          body: `${pendingCount} action item${pendingCount > 1 ? 's' : ''} in "${title}"`,
+        });
+      }
+    });
+  };
+
   useEffect(() => {
     let isMockMode = false;
     let interval;
+
+    // Reset the new-meeting baseline whenever the logged-in user changes
+    knownMeetingIdsRef.current = null;
 
     const loadMockMeetings = () => {
       isMockMode = true; // Mark as mock mode
@@ -270,6 +303,7 @@ function App() {
         }
 
         setMeetings(sortedData);
+        notifyForNewMeetings(sortedData);
         // Automatically select the first meeting on initial load if none selected
         setSelectedMeetingId(prev => {
           if (!prev && sortedData.length > 0) {

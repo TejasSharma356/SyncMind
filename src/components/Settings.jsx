@@ -1,11 +1,54 @@
 import React, { useState } from 'react';
 import { Settings as SettingsIcon, Bell, Shield, Smartphone, MonitorSmartphone, User, CreditCard, Link2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import {
+    getNotificationPermission,
+    requestNotificationPermission,
+    getMeetingProcessedPref,
+    setMeetingProcessedPref,
+    getActionItemsReminderPref,
+    setActionItemsReminderPref,
+} from '../utils/notifications';
 
 const Settings = ({ darkMode, toggleTheme, setCurrentView, onLogout }) => {
     const { user } = useAuth();
     const [desktopConnected, setDesktopConnected] = useState(true);
-    
+    const [meetingProcessedEnabled, setMeetingProcessedEnabled] = useState(getMeetingProcessedPref());
+    const [actionItemsReminderEnabled, setActionItemsReminderEnabled] = useState(getActionItemsReminderPref());
+    const [notifPermission, setNotifPermission] = useState(getNotificationPermission());
+
+    const enableNotificationPref = async (setEnabled, setPref) => {
+        const permission = await requestNotificationPermission();
+        setNotifPermission(permission);
+        if (permission !== 'granted') {
+            setEnabled(false);
+            setPref(false);
+            return;
+        }
+        setEnabled(true);
+        setPref(true);
+    };
+
+    const handleToggleMeetingProcessed = () => {
+        const next = !meetingProcessedEnabled;
+        if (next) {
+            enableNotificationPref(setMeetingProcessedEnabled, setMeetingProcessedPref);
+        } else {
+            setMeetingProcessedEnabled(false);
+            setMeetingProcessedPref(false);
+        }
+    };
+
+    const handleToggleActionItemsReminder = () => {
+        const next = !actionItemsReminderEnabled;
+        if (next) {
+            enableNotificationPref(setActionItemsReminderEnabled, setActionItemsReminderPref);
+        } else {
+            setActionItemsReminderEnabled(false);
+            setActionItemsReminderPref(false);
+        }
+    };
+
     const userName = user?.displayName || (user?.email ? user.email.split('@')[0] : 'Demo User');
     const userEmail = user?.email || 'demo@syncmind.app';
     const userPhoto = user?.photoURL || null;
@@ -110,14 +153,37 @@ const Settings = ({ darkMode, toggleTheme, setCurrentView, onLogout }) => {
                                 <h2 className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">Notifications</h2>
                             </div>
 
+                            {notifPermission === 'denied' && (
+                                <p className="text-sm text-amber-600 dark:text-amber-400 mb-6">
+                                    Browser notifications are blocked. Enable them in your browser's site settings to receive alerts.
+                                </p>
+                            )}
+                            {notifPermission === 'unsupported' && (
+                                <p className="text-sm text-amber-600 dark:text-amber-400 mb-6">
+                                    Your browser does not support notifications.
+                                </p>
+                            )}
+
                             <div className="space-y-6">
-                                <div className="flex items-center justify-between cursor-pointer">
+                                <div className="flex items-center justify-between cursor-pointer" onClick={handleToggleMeetingProcessed}>
                                     <h3 className="text-base font-medium text-gray-700 dark:text-gray-300">Meeting processed alarms</h3>
-                                    <input type="checkbox" defaultChecked className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 bg-gray-50 dark:bg-gray-800 cursor-pointer" />
+                                    <input
+                                        type="checkbox"
+                                        checked={meetingProcessedEnabled}
+                                        onChange={handleToggleMeetingProcessed}
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 bg-gray-50 dark:bg-gray-800 cursor-pointer"
+                                    />
                                 </div>
-                                <div className="flex items-center justify-between cursor-pointer">
+                                <div className="flex items-center justify-between cursor-pointer" onClick={handleToggleActionItemsReminder}>
                                     <h3 className="text-base font-medium text-gray-700 dark:text-gray-300">Action items reminder</h3>
-                                    <input type="checkbox" defaultChecked className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 bg-gray-50 dark:bg-gray-800 cursor-pointer" />
+                                    <input
+                                        type="checkbox"
+                                        checked={actionItemsReminderEnabled}
+                                        onChange={handleToggleActionItemsReminder}
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 bg-gray-50 dark:bg-gray-800 cursor-pointer"
+                                    />
                                 </div>
                             </div>
                         </div>
