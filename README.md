@@ -21,7 +21,7 @@ Check out the live web dashboard: **[https://sync-mind.vercel.app/](https://sync
 
 ## 🏛️ Architecture & Ecosystem Workflow
 
-SyncMInd operates on a seamless, zero-friction pipeline designed to eliminate the cognitive overhead of meetings. **It is critical that contributors understand this architecture to avoid accidentally breaking the pipeline or compromising the security model.**
+SyncMind operates on a seamless, zero-friction pipeline designed to eliminate the cognitive overhead of meetings. **It is critical that contributors understand this architecture to avoid accidentally breaking the pipeline or compromising the security model.**
 
 ### 1. Capture (Desktop App - Electron)
 The workflow starts with the custom **SyncMInd Windows Electron App**.
